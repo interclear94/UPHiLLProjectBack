@@ -5,6 +5,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as cookie from 'cookie-parser'
 import { JwtModule } from '@nestjs/jwt';
+
 @Module({
   imports: [SequelizeModule.forRoot({
     host: process.env.DATABASE_HOST,
@@ -19,13 +20,12 @@ import { JwtModule } from '@nestjs/jwt';
       process.env.ENV === "development" ? ".env" : ".env.production"
     ]
   }),
-
   JwtModule.register({
     secret: process.env.JWT_KEY,
     signOptions: {
       expiresIn: "30m"
     }
-  })
+  }),
   ],
   controllers: [AppController],
   providers: [AppService],
