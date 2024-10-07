@@ -14,7 +14,7 @@ export class Order extends Model {
     @Column({
         type: DataType.DATE
     })
-    data: Date;
+    date: Date;
 
     @Column({
         type: DataType.INTEGER

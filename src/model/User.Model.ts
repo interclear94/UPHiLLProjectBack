@@ -1,5 +1,6 @@
 import { NUMBER } from 'sequelize';
-import { Table, Model, Column, DataType, Default } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, Default, HasMany, BelongsTo, ForeignKey } from 'sequelize-typescript';
+import { AuthCode } from './AuthCode.Model';
 
 @Table({
     tableName: 'user',
@@ -27,6 +28,7 @@ export class User extends Model {
     })
     userpw: string
 
+    @ForeignKey(() => AuthCode)
     @Column({
         type: DataType.INTEGER
     })
@@ -47,4 +49,7 @@ export class User extends Model {
         type: DataType.STRING
     })
     phone: string;
+
+    @BelongsTo(() => AuthCode)
+    authcodes: AuthCode;
 }
