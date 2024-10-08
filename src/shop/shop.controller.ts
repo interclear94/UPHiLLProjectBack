@@ -2,11 +2,11 @@ import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe
 import { ShopService } from './shop.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
-import { AdminGuard } from 'src/guard/admin.guard';
+import { AdminGuard } from 'src/shop/guard/admin.guard';
 import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductInfoPipe } from 'src/shop/pipe/product.pipe';
-import { productInfoSchema } from 'src/schema/product.schema';
-import { ProductTypeInterceptor } from 'src/intercepter/productType.interceptor';
+import { productInfoSchema } from 'src/shop/schema/product.schema';
+import { ProductTypeInterceptor } from 'src/shop/intercepter/productType.interceptor';
 
 @ApiTags("shop")
 @Controller('shop')
