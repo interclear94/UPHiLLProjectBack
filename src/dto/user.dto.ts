@@ -19,3 +19,24 @@ export const signinSchema = z.object({
     userid: z.string().regex(emailRegex),
     userpw: z.string().regex(pwdRegex)
 })
+
+export const dupliEmail = z.object({
+    userid: z.string().regex(emailRegex)
+})
+
+export const dupliNickname = z.object({
+    nickname: z.string().regex(nicknameRegex)
+})
+
+export const findidSchema = z.object({
+    phone: z.string().regex(phoneRegex)
+})
+
+export const findpwSchema = z.object({
+    userid: z.string().regex(emailRegex)
+})
+
+export const updatePwSchema = z.object({
+    userid: z.string().regex(emailRegex),
+    userpw: z.string().regex(pwdRegex)
+})
