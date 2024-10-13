@@ -26,12 +26,15 @@ export class UserService {
         try {
             const { userid, userpw, nickname, name, phone, birth } = signupUser;
 
-            console.log(userid);
-            const dupliNickname = await this.userModel.findOne({ where: { nickname } });
-            console.log(dupliNickname);
+            const birthDate = new Date(birth);
+            console.log(birthDate)
+            const today = new Date();
+            console.log(today)
+            // const year = today.getFullYear()
+            // const minYear = year - 1000;
 
-            if (dupliNickname) {
-                throw new BadRequestException("이미 가입 되어 있는 닉네임 정보 입니다.");
+            if (birthDate > today) {
+                throw new BadRequestException('생년월일은 오늘 이전이어야 합니다.')
             }
 
             const salt = 10;
@@ -51,10 +54,11 @@ export class UserService {
     async signin(signinUser: signinDTO) {
         const { userid, userpw } = signinUser;
         const user = await this.userModel.findOne({ where: { userid } });
+        console.log(user.dataValues.userid)
         const upw = await bcrypt.compare(userpw, user.userpw);
         // console.log(userpw);
         // console.log(user.userpw);
-        // console.log(upw);
+        // console.log(upw, 'upw');
 
         if (!user) {
             throw new BadRequestException('유저 정보가 맞지 많아요')
@@ -124,6 +128,25 @@ export class UserService {
         const data = await this.userModel.update({ userpw: hashedPassword }, { where: { userid } })
         console.log(data, 'service');
         return data;
+    }
+
+    async deleteUser(token: string) {
+        try {
+            const decodedToken = this.jwt.verify(token);
+            console.log(decodedToken);
+            const userid = decodedToken.userid;
+
+            const result = await this.userModel.destroy({ where: { userid } })
+
+            if (result === 0) {
+                throw new BadRequestException('유저를 찾을 수 없습니다.')
+            }
+
+            return { success: true, message: "회원 탈퇴가 완료되었습니다." };
+        }
+        catch (error) {
+            throw new BadRequestException(error, 'deleteUser');
+        }
     }
 
     // 유저 토큰
