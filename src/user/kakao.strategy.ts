@@ -12,7 +12,7 @@ export class KaKaoStrategy extends PassportStrategy(Strategy, "kakao") {
         })
     }
 
-    async validate(access_token: string, refresh_token: string, user: Profile, done: any) {
+    async validate(user: Profile, done: any) {
         try {
             const { id, username, _json } = user;
 
@@ -24,6 +24,8 @@ export class KaKaoStrategy extends PassportStrategy(Strategy, "kakao") {
             };
 
             done(null, userResult)
-        } catch (error) { console.error(error) }
+        } catch (error) {
+            console.error(error)
+        }
     }
 }

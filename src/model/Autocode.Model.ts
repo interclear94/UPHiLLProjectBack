@@ -1,16 +1,26 @@
-import { Model, Table, Column, DataType } from 'sequelize-typescript';
+import { Model, Table, Column, DataType, HasMany } from 'sequelize-typescript';
+import { User } from './User.Model';
 @Table({
     tableName: 'authcode',
-    modelName: 'authcode',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
 })
 export class AuthCode extends Model {
     @Column({
         type: DataType.STRING
     })
     dscr: string;
+
     @Column({
-        type: DataType.TEXT
+        type: DataType.INTEGER
     })
-    auth: string;
+    auth: number;
+
+    @HasMany(() => User, {
+        sourceKey: "authcode",
+        foreignKey: "id"
+    })
+    user: User[];
+
+
 }
