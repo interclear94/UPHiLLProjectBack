@@ -1,4 +1,5 @@
-import { Model, Table, Column, DataType } from "sequelize-typescript";
+import { Model, Table, Column, DataType, HasMany } from "sequelize-typescript";
+import { Order } from "./Order.model";
 
 @Table({
     tableName: "product",
@@ -6,6 +7,12 @@ import { Model, Table, Column, DataType } from "sequelize-typescript";
     timestamps: true
 })
 export class Product extends Model {
+    @HasMany(() => Order, {
+        sourceKey: "id",
+        foreignKey: "productid"
+    })
+    orders: Order[];
+
     @Column({
         type: DataType.STRING
     })
