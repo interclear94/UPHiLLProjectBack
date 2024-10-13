@@ -1,6 +1,6 @@
-import { BadRequestException, Body, Controller, Get, Post, Put, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { signupSchema, signinSchema, findidSchema, dupliEmail, dupliNickname, findpwSchema, updatePwSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, dupliEmail, dupliNickname, findpwSchema, updatePwSchema, deleteSchema } from 'src/dto/user.dto';
 import { Request, Response } from 'express';
 import { UserInterceptor } from './interceptor/user.interceptor';
 import { SignInPipe, SignUpPipe } from 'src/pipe/user.pipe';
@@ -15,6 +15,7 @@ type dupliNDTO = z.infer<typeof dupliNickname>;
 type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
 type updateDTO = z.infer<typeof updatePwSchema>;
+type deleteDTO = z.infer<typeof deleteSchema>;
 
 @ApiTags("유저")
 @UseInterceptors(UserInterceptor)
@@ -67,7 +68,6 @@ export class UserController {
   async signin(@Body(SignInPipe) signin: signinDTO, @Req() req: Request, @Res() res: Response) {
     try {
       console.log('signin');
-      const _result = signinSchema.safeParse(req.body);
       const result = await this.userService.signin(signin);
       // console.log(result, "result");
 
@@ -81,8 +81,7 @@ export class UserController {
       res.json({ token })
 
     } catch (error) {
-      console.log(error);
-      throw new BadRequestException('Login Error');
+      throw new BadRequestException('아이디가 맞지 않아요');
     }
   }
 
@@ -188,6 +187,7 @@ export class UserController {
     return data;
   }
 
+  // 비밀번호 수정
   @Put("/mypage")
   @ApiOperation({ summary: "비밀번호 변경" })
   @ApiBody({
@@ -203,5 +203,34 @@ export class UserController {
     const data = await this.userService.updatePw(updatepw);
     console.log(data, 'controller');
     return data;
+  }
+
+  // 회원 탈퇴
+  @Delete("delete")
+  @ApiOperation({ summary: "회원 탈퇴" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        token: { type: "string" }
+      }
+    }
+  })
+  async deleteUser(@Body() deleteUser: deleteDTO, @Res() res: Response) {
+    try {
+      const { token } = deleteUser;
+      console.log(token);
+
+      if (!token) {
+        throw new BadRequestException('토큰이 없습니다.')
+      }
+
+      const result = await this.userService.deleteUser(token);
+
+      res.clearCookie('token');
+      return res.json(result);
+    } catch (error) {
+      throw new BadRequestException(error, 'deleteUser')
+    }
   }
 }

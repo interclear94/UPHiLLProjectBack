@@ -40,3 +40,7 @@ export const updatePwSchema = z.object({
     userid: z.string().regex(emailRegex),
     userpw: z.string().regex(pwdRegex)
 })
+
+export const deleteSchema = z.object({
+    token: z.string()
+})
