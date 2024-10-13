@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ShopService } from './shop.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
@@ -17,10 +17,12 @@ export class ShopController {
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get(":product")
-  async productListAll(@Param("product") type: string) {
-    console.log("product List")
+  async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number) {
+    console.log("product List");
     try {
-      return await this.shopService.findAll(type);
+      const limit = 12;
+      const data = await this.shopService.findAll(type, page, limit);
+      return data
 
     } catch (error) {
       console.error(error);
@@ -59,7 +61,6 @@ export class ShopController {
   @UseInterceptors(ProductTypeInterceptor)
   async createProduct(@Req() req: Request, @UploadedFile() file: Express.Multer.File, @Body() body: Request) {
     try {
-      console.log(file)
       if (Object.keys(body).length === 0 || file === null) {
         throw new BadRequestException("No required data");
       }
@@ -105,7 +106,7 @@ export class ShopController {
     }
   }
 
-  @Delete("product/:productId")
+  @Delete(":productId")
   @UseGuards(AdminGuard)
   async deleteProduct(@Param("productId", ParseIntPipe) id: number) {
     try {
@@ -127,16 +128,12 @@ export class ShopController {
   async buy(@Req() req: Request, @Body("productId", ParseIntPipe) productId: number) {
     try {
       // const { cookies: { token } } = req;
-      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhbWRpbiIsImF1dGhjb2RlIjoiMDEiLCJpYXQiOjE3Mjc3NzA0MTgsImV4cCI6MTcyNzc3MjIxOH0.pM1niSDr8bFAZpTOFBphQhE0TJI__1HLSnyYjuZxxyU"
+      const token = null;
       return await this.shopService.buy(token, productId);
     } catch (error) {
       console.log(error);
       return false;
     }
   }
-  @Post("test")
-  test(@Body() body: any) {
-    console.log(body)
-    return "";
-  }
+
 }

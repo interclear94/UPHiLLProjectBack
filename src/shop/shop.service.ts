@@ -20,13 +20,13 @@ export class ShopService {
     ) { }
 
     /**
-     * 타입에 따른 모든 상품리스트
+     * 타입에 따른 모든 상품리스트ß
      * @param type
      * @returns productList || null
      */
-    async findAll(type: string) {
+    async findAll(type: string, page = 1 as number, limit = 12 as number) {
         try {
-            return await this.product.findAll({ attributes: ['id', 'name', 'price', 'image'], where: { type } });
+            return await this.product.findAll({ attributes: ['id', 'name', 'price', 'image'], where: { type }, offset: Number((page - 1) * limit), limit });
         } catch (error) {
             console.error(error);
             return null;
@@ -57,9 +57,11 @@ export class ShopService {
         try {
             // const verify = this.jwt.verify(token);
             // 권한 확인
-            await this.Auth('admin');
-
-            body.image = file.filename
+            const isAdmin = await this.authCheck('admin');
+            if (!isAdmin) {
+                throw new UnauthorizedException("current user is not admin");
+            }
+            body.image = `/imgs/${file.filename}`
             await this.product.create(body);
             console.log("success insert");
         } catch (error) {
@@ -149,13 +151,13 @@ export class ShopService {
         }
     }
 
-    async Auth(userId: string) {
+    async authCheck(userId: string) {
         try {
             // 권한 확인
             const { dataValues: { authcodes: { dataValues: { dscr } } } } = await this.user.findOne({ where: { userId }, include: [AuthCode] })
 
             if (dscr !== '관리자') {
-                throw new UnauthorizedException("current user is not admin")
+                return false
             }
             return true
         } catch (error) {
