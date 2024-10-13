@@ -6,13 +6,12 @@ export class SignUpPipe implements PipeTransform {
     transform(value: any, metadata: ArgumentMetadata) {
         try {
             console.log(value);
-            console.log(metadata);
             // DTO에서 가져온 스키마로 유효성 검사
             signupSchema.parse(value);
             return value;
         } catch (error) {
             console.log(error)
-            throw new BadRequestException(error);
+            throw new BadRequestException(error, 'signup');
         }
     }
 }
@@ -22,12 +21,11 @@ export class SignInPipe implements PipeTransform {
     transform(value: any, metadata: ArgumentMetadata) {
         try {
             console.log(value);
-            console.log(metadata);
             // DTO에서 가져온 스키마로 유효성 검사
             signinSchema.parse(value);
             return value;
         } catch (error) {
-            throw new BadRequestException(error);
+            throw new BadRequestException(error, 'signin');
         }
     }
 }
