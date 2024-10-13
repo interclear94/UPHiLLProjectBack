@@ -1,6 +1,6 @@
-import { NUMBER } from 'sequelize';
-import { Table, Model, Column, DataType, Default, HasMany, BelongsTo, ForeignKey } from 'sequelize-typescript';
-import { AuthCode } from './AuthCode.Model';
+import { Table, Model, Column, DataType, Default, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
+import { AuthCode } from './Autocode.Model';
+import { Avatar } from './Avatar.Model';
 
 @Table({
     tableName: 'user',
@@ -11,7 +11,18 @@ export class User extends Model {
     @Column({
         type: DataType.STRING
     })
-    name: string;
+    userid: string;
+
+    @HasMany(() => Avatar, {
+        sourceKey: "userid",
+        foreignKey: "userid"
+    })
+    avatars: Avatar[];
+
+    @Column({
+        type: DataType.STRING
+    })
+    userpw: string;
 
     @Column({
         type: DataType.STRING
@@ -21,23 +32,42 @@ export class User extends Model {
     @Column({
         type: DataType.STRING
     })
-    userid: string;
+    name: string
 
     @Column({
         type: DataType.STRING
     })
-    userpw: string
+    phone: string;
 
+    @Column({
+        type: DataType.DATE
+    })
+    birth: Date
+
+    @Default(1)
     @ForeignKey(() => AuthCode)
     @Column({
         type: DataType.INTEGER
     })
-    authcode: number;
+    auth: number;
 
+    @BelongsTo(() => AuthCode, {
+        foreignKey: 'auth',
+        targetKey: 'id'
+    })
+    authcode: AuthCode;
+
+    @ForeignKey(() => Avatar)
     @Column({
         type: DataType.STRING
     })
     imgid: string;
+
+    @BelongsTo(() => Avatar, {
+        foreignKey: 'imgid',
+        targetKey: 'id'
+    })
+    avatar: Avatar;
 
     @Default(0)
     @Column({
@@ -50,6 +80,4 @@ export class User extends Model {
     })
     phone: string;
 
-    @BelongsTo(() => AuthCode)
-    authcodes: AuthCode;
 }
