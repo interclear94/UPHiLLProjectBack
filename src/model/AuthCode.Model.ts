@@ -1,29 +1,26 @@
-import { Model, Table, Column, DataType, BelongsTo, HasMany, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
+import { Model, Table, Column, DataType, HasMany } from 'sequelize-typescript';
 import { User } from './User.Model';
 @Table({
     tableName: 'authcode',
-    modelName: 'authcode',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
 })
 export class AuthCode extends Model {
-    @PrimaryKey
-    @AutoIncrement
-    @Column
-    id: number;
-
     @Column({
         type: DataType.STRING
     })
     dscr: string;
 
     @Column({
-        type: DataType.TEXT
+        type: DataType.INTEGER
     })
-    auth: string;
-
+    auth: number;
 
     @HasMany(() => User, {
-        sourceKey: 'id'
+        sourceKey: "authcode",
+        foreignKey: "id"
     })
     user: User[];
+
+
 }
