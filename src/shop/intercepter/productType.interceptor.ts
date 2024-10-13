@@ -6,7 +6,6 @@ export class ProductTypeInterceptor implements NestInterceptor {
         const { body, originalUrl } = context.switchToHttp().getRequest();
         const params = originalUrl.split("/");
         const type = params[params.length - 1];
-        console.log(type)
         body.type = type
         return next.handle();
     }
