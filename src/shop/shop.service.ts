@@ -19,8 +19,24 @@ export class ShopService {
         private jwt: JwtService
     ) { }
 
+
     /**
-     * 타입에 따른 모든 상품리스트ß
+     * 특정 상품의 총 갯수 조회
+     * @param type 
+     * @returns 
+     */
+    async countItem(type: string) {
+        try {
+            return await this.product.count({ where: { type } })
+        } catch (error) {
+            console.error(error);
+            return 0;
+        }
+    }
+
+
+    /**
+     * 타입에 따른 모든 상품리스트
      * @param type
      * @returns productList || null
      */
