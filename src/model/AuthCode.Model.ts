@@ -1,10 +1,11 @@
 import { Model, Table, Column, DataType, HasMany } from 'sequelize-typescript';
 import { User } from './User.Model';
+
 @Table({
     tableName: 'authcode',
-    timestamps: true,
-    paranoid: true
+    timestamps: true
 })
+
 export class AuthCode extends Model {
     @Column({
         type: DataType.STRING
@@ -17,10 +18,8 @@ export class AuthCode extends Model {
     auth: number;
 
     @HasMany(() => User, {
-        sourceKey: "authcode",
-        foreignKey: "id"
+        sourceKey: 'id',
+        foreignKey: 'auth'
     })
     user: User[];
-
-
 }

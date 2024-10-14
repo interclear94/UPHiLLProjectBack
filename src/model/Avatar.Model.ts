@@ -1,33 +1,33 @@
-import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, Model, Table } from "sequelize-typescript";
 import { User } from "./User.Model";
+import { Product } from "./Product.Model";
 
 @Table({
     tableName: "avatar",
     modelName: 'avatar',
     timestamps: true,
-    // paranoid: true
 })
+
 export class Avatar extends Model {
-    @HasMany(() => User, {
-        sourceKey: "id",
-        foreignKey: "imgid"
-    })
-    users: User[];
-
     @Column({
         type: DataType.STRING
     })
-    imgurl: string;
-
-    @ForeignKey(() => User)
-    @Column({
-        type: DataType.STRING
-    })
-    userid: string;
+    email: string
 
     @BelongsTo(() => User, {
-        foreignKey: 'userid',
-        targetKey: 'userid'
+        targetKey: "email",
+        foreignKey: "email"
     })
     user: User;
+
+    @Column({
+        type: DataType.INTEGER
+    })
+    productid: number;
+
+    @BelongsTo(() => Product, {
+        targetKey: "id",
+        foreignKey: "productid"
+    })
+    product: Product;
 }
