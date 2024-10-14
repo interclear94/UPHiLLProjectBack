@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { signupSchema, signinSchema, findidSchema, dupliEmail, dupliNickname, findpwSchema, updatePwSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema } from 'src/dto/user.dto';
 import { User } from 'src/model/User.Model';
 import { z } from 'zod';
 import * as bcrypt from 'bcrypt';
+import sequelize from 'sequelize';
 
 type signupDTO = z.infer<typeof signupSchema>;
 type signinDTO = z.infer<typeof signinSchema>;
-type dupliEDTO = z.infer<typeof dupliEmail>;
-type dupliNDTO = z.infer<typeof dupliNickname>;
+type dupliCDTO = z.infer<typeof duplication>;
 type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
 type updateDTO = z.infer<typeof updatePwSchema>;
@@ -24,25 +24,20 @@ export class UserService {
     // 유저 회원가입
     async signup(signupUser: signupDTO) {
         try {
-            const { userid, userpw, nickname, name, phone, birth } = signupUser;
+            const { email, userName, nickName, birthDate, phoneNumber, password } = signupUser;
 
-            const birthDate = new Date(birth);
-            console.log(birthDate)
+            const birth = new Date(birthDate);
             const today = new Date();
-            console.log(today)
-            // const year = today.getFullYear()
-            // const minYear = year - 1000;
 
-            if (birthDate > today) {
+            if (birth > today) {
                 throw new BadRequestException('생년월일은 오늘 이전이어야 합니다.')
             }
 
             const salt = 10;
-            const password = userpw;
             const hashedPassword = await bcrypt.hash(password, salt);
             // console.log(hashedPassword);
             return await this.userModel.create({
-                userid, userpw: hashedPassword, nickname, name, phone, birth
+                email, userName, nickName, birthDate, phoneNumber, password: hashedPassword
             })
         } catch (error) {
             console.error(error);
@@ -52,13 +47,10 @@ export class UserService {
 
     // 유저 로그인
     async signin(signinUser: signinDTO) {
-        const { userid, userpw } = signinUser;
-        const user = await this.userModel.findOne({ where: { userid } });
-        console.log(user.dataValues.userid)
-        const upw = await bcrypt.compare(userpw, user.userpw);
-        // console.log(userpw);
-        // console.log(user.userpw);
-        // console.log(upw, 'upw');
+        const { email, password } = signinUser;
+        const user = await this.userModel.findOne({ where: { email } });
+        console.log(user.dataValues.email)
+        const upw = await bcrypt.compare(password, user.password);
 
         if (!user) {
             throw new BadRequestException('유저 정보가 맞지 많아요')
@@ -71,45 +63,42 @@ export class UserService {
         return user;
     }
 
-    // 아이디 중복 검사
-    async dupliEmail(user: dupliEDTO) {
-        const { userid } = user;
-        const data = await this.userModel.findOne({ where: { userid } });
+    /**
+     * 아이디 또는 닉네임 중복 검사
+     * @param user.userid
+     * @param user.nickname 
+     * @returns userid, nickname
+     */
+    async duplication(user: dupliCDTO) {
+        const Op = sequelize.Op
+
+        const { email = null, nickName = null } = user;
+
+        const data = await this.userModel.findOne({ where: { [Op.or]: [{ email }, { nickName }] } });
+
         console.log(data, 'data')
 
         if (data) {
-            return data.dataValues.userid;
-        }
-        return null;
-    }
-
-    // 닉네임 중복 검사
-    async dupliNickName(user: dupliNDTO) {
-        const { nickname } = user;
-        const data = await this.userModel.findOne({ where: { nickname } });
-        console.log(data, 'service')
-
-        if (data) {
-            return data.dataValues.nickname;
+            throw new BadRequestException(`${user.email ? '아이디' : "닉네임"}가(이) 중복 되었습니다.`)
         }
         return null;
     }
 
     // 아이디 찾기, 휴대폰 번호로 조회
     async findId(user: findidDTO) {
-        const { phone } = user
-        const data = await this.userModel.findOne({ where: { phone } })
+        const { phoneNumber } = user
+        const data = await this.userModel.findOne({ where: { phoneNumber } })
 
         if (data) {
-            return data.dataValues.userid;
+            return data.dataValues.email;
         }
         return null;
     }
 
     // 비밀번호 찾기
     async findPw(user: findpwDTO) {
-        const { userid } = user;
-        const data = await this.userModel.findOne({ where: { userid } });
+        const { email } = user;
+        const data = await this.userModel.findOne({ where: { email } });
 
         if (data) {
             return true
@@ -119,13 +108,12 @@ export class UserService {
 
     // 비밀번호 변경
     async updatePw(user: updateDTO) {
-        const { userid, userpw } = user
+        const { email, password } = user
 
         const salt = 10;
-        const password = userpw;
         const hashedPassword = await bcrypt.hash(password, salt);
         console.log(hashedPassword, 'hash');
-        const data = await this.userModel.update({ userpw: hashedPassword }, { where: { userid } })
+        const data = await this.userModel.update({ password: hashedPassword }, { where: { email } })
         console.log(data, 'service');
         return data;
     }
@@ -134,9 +122,9 @@ export class UserService {
         try {
             const decodedToken = this.jwt.verify(token);
             console.log(decodedToken);
-            const userid = decodedToken.userid;
+            const email = decodedToken.email;
 
-            const result = await this.userModel.destroy({ where: { userid } })
+            const result = await this.userModel.destroy({ where: { email } })
 
             if (result === 0) {
                 throw new BadRequestException('유저를 찾을 수 없습니다.')
@@ -151,8 +139,8 @@ export class UserService {
 
     // 유저 토큰
     userToken(signin: signinDTO) {
-        const { userid } = signin
-        const payload = { userid }
+        const { email } = signin
+        const payload = { email }
 
         // 토큰 생성
         return this.jwt.sign(payload, { expiresIn: 60 * 30 * 1000 });
