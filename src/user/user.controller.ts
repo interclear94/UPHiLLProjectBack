@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { signupSchema, signinSchema, findidSchema, dupliEmail, dupliNickname, findpwSchema, updatePwSchema, deleteSchema } from 'src/dto/user.dto';
-import { Request, Response } from 'express';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema } from 'src/dto/user.dto';
+import { Response } from 'express';
 import { UserInterceptor } from './interceptor/user.interceptor';
 import { SignInPipe, SignUpPipe } from 'src/pipe/user.pipe';
 import { z } from 'zod';
@@ -10,15 +10,13 @@ import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 type signupDTO = z.infer<typeof signupSchema>;
 type signinDTO = z.infer<typeof signinSchema>;
-type dupliEDTO = z.infer<typeof dupliEmail>;
-type dupliNDTO = z.infer<typeof dupliNickname>;
+type dupliCDTO = z.infer<typeof duplication>;
 type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
 type updateDTO = z.infer<typeof updatePwSchema>;
 type deleteDTO = z.infer<typeof deleteSchema>;
 
 @ApiTags("유저")
-@UseInterceptors(UserInterceptor)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
@@ -31,12 +29,13 @@ export class UserController {
     schema: {
       type: "object",
       properties: {
-        userid: { type: "string" },
-        userpw: { type: "string" },
-        nickname: { type: "string" },
-        name: { type: "string" },
-        phone: { type: "string" },
-        birth: { type: "string" }
+        email: { type: "string" },
+        userName: { type: "string" },
+        nickName: { type: "string" },
+        birthDate: { type: "string" },
+        phoneNumber: { type: "string" },
+        password: { type: "string" },
+        checkPassword: { type: "string" }
       }
     }
   })
@@ -60,19 +59,17 @@ export class UserController {
     schema: {
       type: "object",
       properties: {
-        userid: { type: "string" },
-        userpw: { type: "string" }
+        email: { type: "string" },
+        password: { type: "string" }
       }
     }
   })
-  async signin(@Body(SignInPipe) signin: signinDTO, @Req() req: Request, @Res() res: Response) {
+  async signin(@Body(SignInPipe) signin: signinDTO, @Res() res: Response) {
     try {
       console.log('signin');
       const result = await this.userService.signin(signin);
-      // console.log(result, "result");
 
       const token = this.userService.userToken(result);
-      // console.log(token, "token");
 
       const date = new Date();
       date.setTime(date.getTime() + (5 * 60 * 60 * 1000));
@@ -96,62 +93,45 @@ export class UserController {
   async kakaoLoginCallback(@Req() req: any, @Res() res: Response) {
     try {
       const { user } = req;
-      const result = await this.userService.signup({
-        userid: user.id,
-        userpw: "",
-        nickname: "",
-        name: user.username,
-        phone: "",
-        birth: "",
+
+      const date = new Date();
+
+      await this.userService.signup({
+        email: user.id,
+        userName: user.username,
+        nickName: user._json.properties.nickname,
+        birthDate: date,
+        phoneNumber: "010-1234-5678",
+        password: "",
       })
-      console.log(user, "kakaoUser");
-      console.log(result, 'result');
 
       const token = this.userService.userToken(user);
-      const date = new Date();
       date.setMinutes(date.getMinutes() + 30);
       res.cookie("token", token, { httpOnly: true, expires: date })
-      res.send();
-      // 로그인 후 창으로 넘어가야 함(send, redirect)
-      // 사용자 정보로 jwt 토큰
+      res.send('성공');
+
     } catch (error) {
-      console.error(error)
-      throw new BadRequestException('KaKaO Login Error')
+      throw new BadRequestException('Kakao Controller Error')
     }
   }
 
-  // 아이디 중복검사
-  @Post("/duplication/userid")
-  @ApiOperation({ summary: "아이디 중복 검사" })
+  // 아이디 또는 닉네임 중복검사
+  @Post("/duplication")
+  @UseInterceptors(UserInterceptor)
+  @ApiOperation({ summary: "아이디 또는 닉네임 중복 검사" })
   @ApiBody({
     schema: {
       type: "object",
       properties: {
-        userid: { type: "string" }
+        email: { type: "string" },
+        nickName: { type: "string" }
       }
     }
   })
-  async dupliEmail(@Body() findEmail: dupliEDTO) {
-    const data = await this.userService.dupliEmail(findEmail);
+  async duplication(@Body() duplication: dupliCDTO) {
+    const data = await this.userService.duplication(duplication);
     console.log(data, 'controller');
     return data
-  }
-
-  // 닉네임 중복검사
-  @Post("/duplication/nickname")
-  @ApiOperation({ summary: "닉네임 중복 검사" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        nickname: { type: "string" }
-      }
-    }
-  })
-  async duplinickname(@Body() findNickname: dupliNDTO) {
-    const data = await this.userService.dupliNickName(findNickname);
-    console.log(data);
-    return data;
   }
 
   // 아이디 찾기
@@ -161,7 +141,7 @@ export class UserController {
     schema: {
       type: "object",
       properties: {
-        phone: { type: "string" }
+        phoneNumber: { type: "string" }
       }
     }
   })
@@ -178,7 +158,7 @@ export class UserController {
     schema: {
       type: "object",
       properties: {
-        userid: { type: "string" }
+        email: { type: "string" }
       }
     }
   })
@@ -194,8 +174,8 @@ export class UserController {
     schema: {
       type: "object",
       properties: {
-        userid: { type: "string" },
-        userpw: { type: "string" }
+        email: { type: "string" },
+        password: { type: "string" }
       }
     }
   })

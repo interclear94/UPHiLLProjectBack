@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, Profile } from 'passport-kakao'
@@ -12,20 +12,22 @@ export class KaKaoStrategy extends PassportStrategy(Strategy, "kakao") {
         })
     }
 
-    async validate(user: Profile, done: any) {
+    async validate(access_token: string, refresh_token: string, user: Profile, done: any) {
         try {
             const { id, username, _json } = user;
 
             const userResult = {
                 id,
                 username,
+                _json,
                 profileImage: _json.properties.profile_image,
-                email: _json.kakao_account.email
+                auth: 1
             };
 
             done(null, userResult)
+
         } catch (error) {
-            console.error(error)
+            throw new BadRequestException('kakao strategy error')
         }
     }
 }

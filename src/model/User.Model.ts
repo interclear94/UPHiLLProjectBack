@@ -1,48 +1,45 @@
-import { Table, Model, Column, DataType, Default, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
-import { AuthCode } from './Autocode.Model';
+import { Table, Model, Column, DataType, Default, ForeignKey, BelongsTo, HasMany, Unique, HasOne } from 'sequelize-typescript';
+import { AuthCode } from './Authcode.Model';
 import { Avatar } from './Avatar.Model';
+import { Order } from './Order.model';
 
 @Table({
     tableName: 'user',
     modelName: 'user',
     timestamps: true,
 })
+
 export class User extends Model {
+    @Unique
     @Column({
         type: DataType.STRING
     })
-    userid: string;
-
-    @HasMany(() => Avatar, {
-        sourceKey: "userid",
-        foreignKey: "userid"
-    })
-    avatars: Avatar[];
+    email: string;
 
     @Column({
         type: DataType.STRING
     })
-    userpw: string;
+    userName: string;
 
     @Column({
         type: DataType.STRING
     })
-    nickname: string;
-
-    @Column({
-        type: DataType.STRING
-    })
-    name: string
-
-    @Column({
-        type: DataType.STRING
-    })
-    phone: string;
+    nickName: string;
 
     @Column({
         type: DataType.DATE
     })
-    birth: Date
+    birthDate: Date
+
+    @Column({
+        type: DataType.STRING
+    })
+    phoneNumber: string;
+
+    @Column({
+        type: DataType.STRING
+    })
+    password: string
 
     @Default(1)
     @ForeignKey(() => AuthCode)
@@ -57,17 +54,11 @@ export class User extends Model {
     })
     authcode: AuthCode;
 
-    @ForeignKey(() => Avatar)
-    @Column({
-        type: DataType.STRING
+    @HasOne(() => Avatar, {
+        sourceKey: "email",
+        foreignKey: "email"
     })
-    imgid: string;
-
-    @BelongsTo(() => Avatar, {
-        foreignKey: 'imgid',
-        targetKey: 'id'
-    })
-    avatar: Avatar;
+    avatar: Avatar
 
     @Default(0)
     @Column({
@@ -75,9 +66,9 @@ export class User extends Model {
     })
     point: number;
 
-    @Column({
-        type: DataType.STRING
+    @HasMany(() => Order, {
+        sourceKey: 'email',
+        foreignKey: 'email'
     })
-    phone: string;
-
+    orders: Order[];
 }
