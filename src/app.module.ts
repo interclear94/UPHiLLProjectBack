@@ -11,6 +11,7 @@ import { join } from 'path'
 import { AuthCode } from './model/AuthCode.Model';
 import { UserModule } from './user/user.module';
 import { Dialect } from 'sequelize';
+import { User } from './model/User.Model';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { Dialect } from 'sequelize';
       password: process.env.DATABASE_PASSWORD,
       autoLoadModels: true,
       synchronize: true
-    }), SequelizeModule.forFeature([AuthCode]),
+    }), SequelizeModule.forFeature([AuthCode, User]),
     JwtModule.register({
       secret: process.env.JWT_KEY,
       signOptions: {
