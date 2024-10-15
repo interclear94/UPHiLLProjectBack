@@ -1,5 +1,5 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from "@nestjs/common";
-import { map, Observable, tap } from "rxjs";
+import { CallHandler, ExecutionContext, NestInterceptor } from "@nestjs/common";
+import { Observable, tap } from "rxjs";
 
 
 export class UserInterceptor implements NestInterceptor {
@@ -11,27 +11,16 @@ export class UserInterceptor implements NestInterceptor {
 
         const log = `${req.originalUrl} ${date.toLocaleString}`
 
+        const { type, data } = context.switchToHttp().getRequest().body;
+
+        context.switchToHttp().getRequest().body[type] = data
+
         return next.handle().pipe(
             tap(() => {
                 const _date = new Date();
                 const time = _date.getTime() - date.getTime() + "ms";
                 console.log(log, time)
-            }),
-            map((data) => ({ mykey: "hyeok", data: { id: "hyeok" } }))
+            })
         );
     }
 }
-
-// @Injectable()
-// export class LoggingInterceptor implements NestInterceptor {
-//   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-//     console.log('Before...');
-
-//     const now = Date.now();
-//     return next
-//       .handle()
-//       .pipe(
-//         tap(() => console.log(`After... ${Date.now() - now}ms`)),
-//       );
-//   }
-// }

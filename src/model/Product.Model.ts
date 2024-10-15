@@ -1,18 +1,14 @@
-import { Model, Table, Column, DataType, HasMany } from "sequelize-typescript";
+import { Model, Table, Column, DataType, HasMany, PrimaryKey, AutoIncrement } from "sequelize-typescript";
 import { Order } from "./Order.model";
+import { Avatar } from "./Avatar.Model";
 
 @Table({
     tableName: "product",
     modelName: "product",
     timestamps: true
 })
-export class Product extends Model {
-    @HasMany(() => Order, {
-        sourceKey: "id",
-        foreignKey: "productid"
-    })
-    orders: Order[];
 
+export class Product extends Model {
     @Column({
         type: DataType.STRING
     })
@@ -37,4 +33,16 @@ export class Product extends Model {
         type: DataType.STRING
     })
     type: string;
+
+    @HasMany(() => Avatar, {
+        sourceKey: "id",
+        foreignKey: "productid"
+    })
+    avatars: Avatar[];
+
+    @HasMany(() => Order, {
+        sourceKey: 'id',
+        foreignKey: 'productid'
+    })
+    orders: Order[];
 }

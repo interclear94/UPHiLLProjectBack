@@ -7,23 +7,23 @@ import { Product } from "./Product.Model";
     modelName: "order",
     timestamps: true
 })
+
 export class Order extends Model {
-    @ForeignKey(() => User)
     @Column({
         type: DataType.STRING
     })
-    userid: string;
+    email: string;
 
     @BelongsTo(() => User, {
-        foreignKey: 'userid',
-        targetKey: 'userid'
+        foreignKey: 'email',
+        targetKey: 'email'
     })
     user: User;
 
     @Column({
         type: DataType.DATE
     })
-    data: Date;
+    date: Date;
 
     @ForeignKey(() => Product)
     @Column({
@@ -32,8 +32,8 @@ export class Order extends Model {
     productid: number;
 
     @BelongsTo(() => Product, {
-        foreignKey: 'productid',
-        targetKey: 'id'
+        targetKey: 'id',
+        foreignKey: 'productid'
     })
     product: Product;
 

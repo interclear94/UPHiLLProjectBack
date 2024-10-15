@@ -1,44 +1,42 @@
 import { z } from "zod";
 
 const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
-const pwdRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
-const nicknameRegex = /^[a-zA-Z가-힣0-9]{1,5}$/;
-const nameRegex = /^[a-zA-Z가-힣\s-]{2,10}$/;
-const phoneRegex = /^01([0|1|6|7|8|9])-([0-9]{3,4})-([0-9]{4})$/;
+const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+const nickNameRegex = /^[a-zA-Z가-힣0-9]{1,5}$/;
+const userNameRegex = /^[a-zA-Z가-힣\s-]{2,10}$/;
+const phoneNumberRegex = /^01([0|1|6|7|8|9])-([0-9]{3,4})-([0-9]{4})$/;
 
 export const signupSchema = z.object({
-    userid: z.string().regex(emailRegex),
-    userpw: z.string().regex(pwdRegex),
-    nickname: z.string().regex(nicknameRegex),
-    name: z.string().regex(nameRegex),
-    phone: z.string().regex(phoneRegex),
-    birth: z.string().date()
+    email: z.string().regex(emailRegex),
+    userName: z.string().regex(userNameRegex),
+    nickName: z.string().regex(nickNameRegex),
+    birthDate: z.date(),
+    phoneNumber: z.string().regex(phoneNumberRegex),
+    password: z.string().regex(passwordRegex),
+    checkPassword: z.string().regex(passwordRegex)
 })
 
 export const signinSchema = z.object({
-    userid: z.string().regex(emailRegex),
-    userpw: z.string().regex(pwdRegex)
+    email: z.string().regex(emailRegex),
+    password: z.string().regex(passwordRegex)
 })
 
-export const dupliEmail = z.object({
-    userid: z.string().regex(emailRegex)
-})
-
-export const dupliNickname = z.object({
-    nickname: z.string().regex(nicknameRegex)
+export const duplication = z.object({
+    email: z.string().regex(emailRegex).nullable(),
+    nickName: z.string().regex(nickNameRegex).nullable()
 })
 
 export const findidSchema = z.object({
-    phone: z.string().regex(phoneRegex)
+    phoneNumber: z.string().regex(phoneNumberRegex)
 })
 
 export const findpwSchema = z.object({
-    userid: z.string().regex(emailRegex)
+    email: z.string().regex(emailRegex)
 })
 
 export const updatePwSchema = z.object({
-    userid: z.string().regex(emailRegex),
-    userpw: z.string().regex(pwdRegex)
+    email: z.string().regex(emailRegex),
+    password: z.string().regex(passwordRegex)
 })
 
 export const deleteSchema = z.object({
