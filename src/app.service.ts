@@ -25,11 +25,11 @@ export class AppService {
     try {
       const adminId = this.config.get("ADMIN_USER_ID");
       const adminPW = await hash(this.config.get("ADMIN_USER_PASSWORD"), 10);
-      const admin = await this.user.findOne({ where: { userid: adminId } });
+      const admin = await this.user.findOne({ where: { email: adminId } });
       if (!admin) {
         await this.user.create({
-          userid: adminId,
-          userpw: adminPW,
+          email: adminId,
+          password: adminPW,
           auth: 2
         })
       }
