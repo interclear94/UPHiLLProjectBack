@@ -12,6 +12,20 @@ import { ProductTypeInterceptor } from 'src/shop/intercepter/productType.interce
 @Controller('shop')
 export class ShopController {
   constructor(private readonly shopService: ShopService) { }
+
+  @ApiOperation({ summary: 'productList item count' })
+  @ApiResponse({ status: 200, description: 'find success' })
+  @ApiParam({ name: 'product', type: 'string', description: 'product type' })
+  @Get("/:product/count")
+  async getTotalItemCount(@Param('product') type: string) {
+    try {
+      return await this.shopService.countItem(type);
+    } catch (error) {
+      console.error(error);
+      return 0;
+    }
+  }
+
   @ApiOperation({ summary: 'productList find' })
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiResponse({ status: 403, description: 'not find Resource' })
