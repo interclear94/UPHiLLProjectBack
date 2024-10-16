@@ -44,3 +44,11 @@ export const updatePwSchema = z.object({
 export const deleteSchema = z.object({
     token: z.string()
 })
+
+export const tokenSchema = z.object({
+    email: z.string().regex(emailRegex),
+    nickName: z.string().regex(nickNameRegex),
+    img: z.string(),
+    point: z.number(),
+    authcode: z.number()
+})
