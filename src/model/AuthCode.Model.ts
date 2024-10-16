@@ -7,15 +7,11 @@ import { User } from './User.Model';
 })
 
 export class AuthCode extends Model {
+
     @Column({
         type: DataType.STRING
     })
-    dscr: string;
-
-    @Column({
-        type: DataType.INTEGER
-    })
-    auth: number;
+    auth: string;
 
     @HasMany(() => User, {
         sourceKey: 'id',
