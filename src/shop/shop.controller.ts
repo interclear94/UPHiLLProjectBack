@@ -31,17 +31,28 @@ export class ShopController {
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get(":product")
-  async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number) {
+  async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number, @Req() req: Request) {
     console.log("product List");
     try {
-      const limit = 12;
-      const data = await this.shopService.findAll(type, page, limit);
+      const { cookies: { token } } = req;
+      const data = await this.shopService.findAll(type, page, token);
       return data
 
     } catch (error) {
       console.error(error);
       return null;
     }
+  }
+
+
+  @ApiOperation({ summary: 'productList find' })
+  @ApiResponse({ status: 200, description: 'find success' })
+  @ApiResponse({ status: 403, description: 'not find Resource' })
+  @ApiParam({ name: 'product', type: 'string', description: 'product type' })
+  @Get("mybox/:product")
+  getMybox(@Param("product") type: string, @Query("page", ParseIntPipe) page: number) {
+    const data = this.shopService.myStorage(type, page);
+    return data;
   }
 
   @Get("detail/:id")

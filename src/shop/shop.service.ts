@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Put, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Avatar } from 'src/model/Avatar.Model';
 import { Product } from 'src/model/Product.Model';
@@ -43,9 +43,43 @@ export class ShopService {
      * @param type
      * @returns productList || null
      */
-    async findAll(type: string, page = 1 as number, limit = ItemCount as number) {
+    async findAll(type: string, page = 1 as number, token: string) {
         try {
-            return await this.product.findAll({ attributes: ['id', 'name', 'price', 'image'], where: { type }, offset: Number((page - 1) * limit), limit });
+            const { email } = this.jwt.verify(token);
+            return await this.product.findAll({
+                where: { type },
+                offset: Number((page - 1) * ItemCount),
+                limit: ItemCount,
+                include: [{
+                    model: Order,
+                    required: false,
+                    where: { email }
+                }]
+            });
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    }
+    /**
+     * 유저가 보유한 상품
+     * @param type
+     * @returns productList || null
+     */
+    async myStorage(type: string, page = 1 as number) {
+        try {
+            //const { email } = this.jwt.verify(token);
+            return await this.order.findAll({
+                where: { email: 'user' },
+                offset: Number((page - 1) * ItemCount),
+                limit: ItemCount,
+                include: [{
+                    model: Product,
+                    where: { type },
+
+                }],
+
+            });
         } catch (error) {
             console.error(error);
             return null;
