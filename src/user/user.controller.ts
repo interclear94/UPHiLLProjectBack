@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema, tokenSchema } from 'src/dto/user.dto';
 import { Response } from 'express';
 import { UserInterceptor } from './interceptor/user.interceptor';
 import { SignInPipe, SignUpPipe } from 'src/pipe/user.pipe';
@@ -15,6 +15,7 @@ type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
 type updateDTO = z.infer<typeof updatePwSchema>;
 type deleteDTO = z.infer<typeof deleteSchema>;
+type utokenDTO = z.infer<typeof tokenSchema>;
 
 @Controller('user')
 export class UserController {
@@ -65,18 +66,27 @@ export class UserController {
       }
     }
   })
-  async signin(@Body(SignInPipe) signin: signinDTO, @Res() res: Response) {
+  async signin(@Body(SignInPipe) signin: signinDTO, utoken: utokenDTO, @Res() res: Response) {
     try {
       console.log('signin');
-      const result = await this.userService.signin(signin);
+      const _result = await this.userService.signin(signin);
+
+      const result = {
+        email: _result.email,
+        nickName: _result.nickName,
+        image: _result.dataValues.avatar.dataValues.product.image,
+        point: _result.point,
+        dscr: _result.authcode.dataValues.dscr
+      }
 
       const token = this.userService.userToken(result);
+      console.log(token, 'token');
 
       const date = new Date();
       date.setTime(date.getTime() + (5 * 60 * 60 * 1000));
 
-      res.cookie('token', token, { httpOnly: true, expires: date, sameSite: 'none', secure: true, path: '/', domain: 'localhost' });
-      res.json({ token })
+      res.cookie('token', token, { httpOnly: true, expires: date, sameSite: 'none', secure: true, path: '/', domain: '127.0.0.1' });
+      res.json(_result)
 
     } catch (error) {
       if (error.response === 2) {
