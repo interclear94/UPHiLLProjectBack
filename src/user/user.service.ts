@@ -49,15 +49,10 @@ export class UserService {
     async signin(signinUser: signinDTO) {
         const { email, password } = signinUser;
         const user = await this.userModel.findOne({ where: { email } });
-        console.log(user.dataValues.email)
         const upw = await bcrypt.compare(password, user.password);
 
-        if (!user) {
-            throw new BadRequestException('유저 정보가 맞지 많아요')
-        }
-
-        if (!upw) {
-            throw new BadRequestException('비밀번호가 맞지 않아요');
+        if (upw === false) {
+            throw new BadRequestException(2);
         }
 
         return user;
@@ -72,15 +67,26 @@ export class UserService {
     async duplication(user: dupliCDTO) {
         const Op = sequelize.Op
 
-        const { email = null, nickName = null } = user;
+        const { email = null, nickName = null, phoneNumber = null } = user;
 
-        const data = await this.userModel.findOne({ where: { [Op.or]: [{ email }, { nickName }] } });
+        const data = await this.userModel.findOne({ where: { [Op.or]: [{ email }, { nickName }, { phoneNumber }] } });
 
         console.log(data, 'data')
 
         if (data) {
-            throw new BadRequestException(`${user.email ? '아이디' : "닉네임"}가(이) 중복 되었습니다.`)
+            if (email) {
+                throw new BadRequestException("아이디가 중복 되었습니다.")
+            }
+
+            if (nickName) {
+                throw new BadRequestException("닉네임이 중복 되었습니다.")
+            }
+
+            if (phoneNumber) {
+                throw new BadRequestException("연락처가 중복 되었습니다.")
+            }
         }
+
         return null;
     }
 
