@@ -76,17 +76,16 @@ export class UserController {
         nickName: _result.nickName,
         image: _result.dataValues.avatar.dataValues.product.image,
         point: _result.point,
-        dscr: _result.authcode.dataValues.dscr
+        auth: _result.authcode.dataValues.auth
       }
 
       const token = this.userService.userToken(result);
-      console.log(token, 'token');
 
       const date = new Date();
       date.setTime(date.getTime() + (5 * 60 * 60 * 1000));
 
       res.cookie('token', token, { httpOnly: true, expires: date, sameSite: 'none', secure: true, path: '/', domain: '127.0.0.1' });
-      res.json(_result)
+      res.json(result)
 
     } catch (error) {
       if (error.response === 2) {
@@ -148,7 +147,7 @@ export class UserController {
   async duplication(@Body() duplication: dupliCDTO) {
     const data = await this.userService.duplication(duplication);
     console.log(data, 'controller');
-    return data
+    return data;
   }
 
   // 아이디 찾기
