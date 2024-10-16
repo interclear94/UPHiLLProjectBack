@@ -16,13 +16,13 @@ type findpwDTO = z.infer<typeof findpwSchema>;
 type updateDTO = z.infer<typeof updatePwSchema>;
 type deleteDTO = z.infer<typeof deleteSchema>;
 
-@ApiTags("유저")
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
   // 회원가입
   @Post("signup")
+  @ApiTags("user")
   @ApiOperation({ summary: "회원가입" })
   @ApiConsumes("application/json")
   @ApiBody({
@@ -53,6 +53,7 @@ export class UserController {
 
   // 로그인
   @Post("/signin")
+  @ApiTags("user")
   @ApiOperation({ summary: "로그인" })
   @ApiConsumes("application/json")
   @ApiBody({
@@ -78,17 +79,22 @@ export class UserController {
       res.json({ token })
 
     } catch (error) {
-      throw new BadRequestException('아이디가 맞지 않아요');
+      if (error.response === 2) {
+        throw new BadRequestException('비밀번호가 맞지 않습니다.');
+      }
+      throw new BadRequestException('없는 유저 입니다.');
     }
   }
 
   // 카카오 로그인
   @Get("kakao")
+  @ApiTags("kakao")
   @UseGuards(AuthGuard("kakao"))
   kakaoLogin() { }
 
   // 카카오 콜백
   @Get("kakao/callback")
+  @ApiTags("kakao")
   @UseGuards(AuthGuard("kakao"))
   async kakaoLoginCallback(@Req() req: any, @Res() res: Response) {
     try {
@@ -100,7 +106,7 @@ export class UserController {
         email: user.id,
         userName: user.username,
         nickName: user._json.properties.nickname,
-        birthDate: date,
+        birthDate: "2005-01-21",
         phoneNumber: "010-1234-5678",
         password: "",
       })
@@ -108,7 +114,7 @@ export class UserController {
       const token = this.userService.userToken(user);
       date.setMinutes(date.getMinutes() + 30);
       res.cookie("token", token, { httpOnly: true, expires: date })
-      res.send('성공');
+      res.redirect('http://127.0.0.1:3000/main');
 
     } catch (error) {
       throw new BadRequestException('Kakao Controller Error')
@@ -118,13 +124,14 @@ export class UserController {
   // 아이디 또는 닉네임 중복검사
   @Post("/duplication")
   @UseInterceptors(UserInterceptor)
+  @ApiTags("user")
   @ApiOperation({ summary: "아이디 또는 닉네임 중복 검사" })
   @ApiBody({
     schema: {
       type: "object",
       properties: {
-        email: { type: "string" },
-        nickName: { type: "string" }
+        type: { type: "string" },
+        data: { type: "string" }
       }
     }
   })
@@ -136,6 +143,7 @@ export class UserController {
 
   // 아이디 찾기
   @Post("/findid")
+  @ApiTags("user")
   @ApiOperation({ summary: "아이디 찾기" })
   @ApiBody({
     schema: {
@@ -153,6 +161,7 @@ export class UserController {
 
   // 비밀번호 찾기
   @Post("/findpw")
+  @ApiTags("user")
   @ApiOperation({ summary: "비밀번호 찾기" })
   @ApiBody({
     schema: {
@@ -168,7 +177,8 @@ export class UserController {
   }
 
   // 비밀번호 수정
-  @Put("/mypage")
+  @Put("/findpassword")
+  @ApiTags("user")
   @ApiOperation({ summary: "비밀번호 변경" })
   @ApiBody({
     schema: {
@@ -187,6 +197,7 @@ export class UserController {
 
   // 회원 탈퇴
   @Delete("delete")
+  @ApiTags("user")
   @ApiOperation({ summary: "회원 탈퇴" })
   @ApiBody({
     schema: {

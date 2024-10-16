@@ -6,7 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: ["http://localhost:3000", "http://localhost:5500",],
+    origin: ["http://127.0.0.1:3000"],
     methods: ["POST", "GET", "PUT", "DELETE"],
     credentials: true
   })
@@ -15,8 +15,8 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle("UPHiLL API")
     .setDescription("UPHiLL API문서")
-    .addTag("카카오")
-    .addTag("User")
+    .addTag("kakao")
+    .addTag("user")
     .addTag("shop")
     .addBearerAuth(
       {
