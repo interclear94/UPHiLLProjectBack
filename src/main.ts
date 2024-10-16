@@ -15,8 +15,8 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle("UPHiLL API")
     .setDescription("UPHiLL API문서")
-    .addTag("카카오")
-    .addTag("User")
+    .addTag("kakao")
+    .addTag("user")
     .addTag("shop")
     .addBearerAuth(
       {
