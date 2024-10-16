@@ -30,7 +30,8 @@ export class AppService {
         await this.user.create({
           email: adminId,
           password: adminPW,
-          auth: 2
+          auth: 2,
+          phoneNumber: '02-0000-0000'
         })
       }
     } catch (error) {
