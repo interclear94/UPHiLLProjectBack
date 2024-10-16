@@ -54,6 +54,5 @@ export class AppService {
       console.error(error)
     }
   }
-
 }
 
