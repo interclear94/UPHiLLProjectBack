@@ -10,6 +10,8 @@ import { rmSync, readFileSync } from 'fs'
 import { Sequelize } from 'sequelize-typescript';
 import { join } from 'path';
 
+const ItemCount = 12;
+
 @Injectable()
 export class ShopService {
     constructor(@InjectModel(Product) private product: typeof Product,
@@ -25,9 +27,10 @@ export class ShopService {
      * @param type 
      * @returns 
      */
-    async countItem(type: string) {
+    async getPage(type: string) {
         try {
-            return await this.product.count({ where: { type } })
+            const totalPage = Math.ceil(await this.product.count({ where: { type } }) / ItemCount);
+            return totalPage;
         } catch (error) {
             console.error(error);
             return 0;
@@ -40,7 +43,7 @@ export class ShopService {
      * @param type
      * @returns productList || null
      */
-    async findAll(type: string, page = 1 as number, limit = 12 as number) {
+    async findAll(type: string, page = 1 as number, limit = ItemCount as number) {
         try {
             return await this.product.findAll({ attributes: ['id', 'name', 'price', 'image'], where: { type }, offset: Number((page - 1) * limit), limit });
         } catch (error) {
@@ -97,7 +100,7 @@ export class ShopService {
             if (file) {
                 body.img = file.filename;
             }
-            await this.product.update(body, { where: body.productId });
+            await this.product.update(body, { where: { id: body.productId } });
             return true;
         } catch (error) {
             console.error(error);

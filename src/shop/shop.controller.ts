@@ -17,9 +17,9 @@ export class ShopController {
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get("/:product/count")
-  async getTotalItemCount(@Param('product') type: string) {
+  async getPage(@Param('product') type: string) {
     try {
-      return await this.shopService.countItem(type);
+      return await this.shopService.getPage(type);
     } catch (error) {
       console.error(error);
       return 0;
