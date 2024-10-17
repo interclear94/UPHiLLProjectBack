@@ -39,7 +39,8 @@ export class AppService {
           email: email,
           password: adminPW,
           auth: 2,
-          phoneNumber: '02-0000-0000'
+          phoneNumber: '02-0000-0000',
+          nickName: '관리자'
         })
       }
     } catch (error) {
