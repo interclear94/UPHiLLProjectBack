@@ -13,6 +13,7 @@ import { UserModule } from './user/user.module';
 import { Dialect } from 'sequelize';
 import { User } from './model/User.Model';
 import { Product } from './model/Product.Model';
+import { Avatar } from './model/Avatar.Model';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { Product } from './model/Product.Model';
       password: process.env.DATABASE_PASSWORD,
       autoLoadModels: true,
       synchronize: true
-    }), SequelizeModule.forFeature([AuthCode, User, Product]),
+    }), SequelizeModule.forFeature([AuthCode, User, Product, Avatar]),
     JwtModule.register({
       secret: process.env.JWT_KEY,
       signOptions: {
