@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ShopService } from './shop.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
@@ -51,10 +51,9 @@ export class ShopController {
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get("mybox/:product")
-  async getMybox(@Param("product") type: string, @Query("page", ParseIntPipe) page: number) {
-    console.log("여기 옴")
-    const data = await this.shopService.myStorage(type, page);
-    console.log("test", data)
+  async getMybox(@Param("product") type: string, @Query("page", ParseIntPipe) page: number, @Query('use', ParseBoolPipe) usage: boolean) {
+    console.log("test")
+    const data = await this.shopService.myStorage(type, page, usage);
     return data;
   }
 
@@ -163,4 +162,11 @@ export class ShopController {
       return false;
     }
   }
+
+  @Put("product/complete")
+  async setUsage(@Body("orderProduct", ParseIntPipe) orderId: number) {
+    console.log(orderId)
+    return this.shopService.setUsage(orderId)
+  }
+
 }

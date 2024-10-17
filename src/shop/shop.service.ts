@@ -67,20 +67,21 @@ export class ShopService {
      * @param type
      * @returns productList || null
      */
-    async myStorage(type: string, page = 1 as number) {
+    async myStorage(type: string, page = 1 as number, usage: boolean) {
         try {
             //const { email } = this.jwt.verify(token);
-            return await this.order.findAll({
-                where: { email: 'user' },
+            console.log(usage)
+            const data = await this.order.findAll({
+                where: { email: 'user', usage },
                 offset: Number((page - 1) * ItemCount),
                 limit: ItemCount,
                 include: [{
                     model: Product,
                     where: { type },
-
                 }],
-
             });
+            console.log(data)
+            return data;
         } catch (error) {
             console.error(error);
             return null;
@@ -218,5 +219,8 @@ export class ShopService {
         } catch (error) {
             console.error(error);
         }
+    }
+    async setUsage(orderId: number) {
+        this.order.update({ usage: true }, { where: { id: orderId } })
     }
 }
