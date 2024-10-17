@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize'
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import cookie from 'cookie-parser'
+import * as cookie from 'cookie-parser'
 import { JwtModule } from '@nestjs/jwt';
 import { ShopModule } from './shop/shop.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -52,6 +52,6 @@ import { User } from './model/User.Model';
 
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(cookie).forRoutes("*");
+    consumer.apply(cookie()).forRoutes("*");
   }
 }
