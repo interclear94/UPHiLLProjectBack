@@ -67,13 +67,17 @@ export class AppService {
    * 초기 아바타 생성
    */
   async initAtavar(email: string) {
-    await this.product.create({
-      name: 'initAvatar',
-      price: 0,
-      image: "/img/user.png",
-      type: 'avatar',
-    })
-    await this.avatar.create({ email, productid: 1 })
+    const pData = await this.product.findAll({ where: { name: "initAvatar" } });
+    if (pData.length <= 0)
+      await this.product.create({
+        name: 'initAvatar',
+        price: 0,
+        image: "/img/user.png",
+        type: 'avatar',
+      })
+    const avatarData = await this.avatar.findOne({ where: { email } });
+    if (!avatarData)
+      await this.avatar.create({ email, productid: 1 });
   }
 }
 
