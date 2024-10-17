@@ -1,11 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, tokenSchema } from 'src/dto/user.dto';
 import { User } from 'src/model/User.Model';
 import { z } from 'zod';
 import * as bcrypt from 'bcrypt';
 import sequelize from 'sequelize';
+import { Avatar } from 'src/model/Avatar.Model';
+import { Product } from 'src/model/Product.Model';
+import { AuthCode } from 'src/model/AuthCode.Model';
 
 type signupDTO = z.infer<typeof signupSchema>;
 type signinDTO = z.infer<typeof signinSchema>;
@@ -13,12 +16,13 @@ type dupliCDTO = z.infer<typeof duplication>;
 type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
 type updateDTO = z.infer<typeof updatePwSchema>;
+type utokenDTO = z.infer<typeof tokenSchema>;
 
 @Injectable()
 export class UserService {
     constructor(
-        @InjectModel(User)
-        private readonly userModel: typeof User,
+        @InjectModel(User) private readonly userModel: typeof User,
+        @InjectModel(Avatar) private readonly avatar: typeof Avatar,
         private readonly jwt: JwtService) { }
 
     // 유저 회원가입
@@ -48,14 +52,29 @@ export class UserService {
     // 유저 로그인
     async signin(signinUser: signinDTO) {
         const { email, password } = signinUser;
-        const user = await this.userModel.findOne({ where: { email } });
-        const upw = await bcrypt.compare(password, user.password);
 
-        if (upw === false) {
-            throw new BadRequestException(2);
+        try {
+            const user = await this.userModel.findOne({
+                where: { email }, include: [{
+                    model: Avatar,
+                    include: [Product]
+                }, {
+                    model: AuthCode,
+                    as: 'authcode'
+                }]
+            });
+
+            const upw = await bcrypt.compare(password, user.password);
+
+            if (upw === false) {
+                throw new BadRequestException(2);
+            }
+
+            return user;
+
+        } catch (error) {
+            console.error(error)
         }
-
-        return user;
     }
 
     /**
@@ -144,12 +163,9 @@ export class UserService {
     }
 
     // 유저 토큰
-    userToken(signin: signinDTO) {
-        const { email } = signin
-        const payload = { email }
-
+    userToken(token: any) {
         // 토큰 생성
-        return this.jwt.sign(payload, { expiresIn: 60 * 30 * 1000 });
+        return this.jwt.sign(token, { expiresIn: 60 * 30 * 1000 });
     }
 
     // 토큰 복호화
