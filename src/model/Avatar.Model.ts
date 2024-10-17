@@ -1,4 +1,4 @@
-import { BelongsTo, Column, DataType, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, Default, Model, Table } from "sequelize-typescript";
 import { User } from "./User.Model";
 import { Product } from "./Product.Model";
 
@@ -20,6 +20,7 @@ export class Avatar extends Model {
     })
     user: User;
 
+    @Default(1)
     @Column({
         type: DataType.INTEGER
     })

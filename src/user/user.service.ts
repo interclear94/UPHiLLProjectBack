@@ -40,9 +40,12 @@ export class UserService {
             const salt = 10;
             const hashedPassword = await bcrypt.hash(password, salt);
             // console.log(hashedPassword);
-            return await this.userModel.create({
+            const userData = await this.userModel.create({
                 email, userName, nickName, birthDate, phoneNumber, password: hashedPassword
-            })
+            });
+            // 유저 등록시 초기 아바타 등록
+            await this.avatar.create({ email });
+            return userData
         } catch (error) {
             console.error(error);
             console.log("signup service error");
@@ -65,7 +68,6 @@ export class UserService {
             });
 
             const upw = await bcrypt.compare(password, user.password);
-
             if (upw === false) {
                 throw new BadRequestException(2);
             }
