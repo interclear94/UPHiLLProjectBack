@@ -7,13 +7,17 @@ import { readFileSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
 import { hash } from 'bcrypt';
 import { User } from './model/User.Model';
+import { Product } from './model/Product.Model';
 @Injectable()
 export class AppService {
   constructor(@InjectModel(AuthCode) private authcode: typeof AuthCode,
-    private sequelize: Sequelize, private config: ConfigService, @InjectModel(User) private user: typeof User) {
+    private sequelize: Sequelize, private config: ConfigService,
+    @InjectModel(User) private user: typeof User,
+    @InjectModel(Product) private product: typeof Product) {
     const init = async () => {
       this.initAdminCode();
       await this.initAdminUser();
+      await this.initAtavar();
     }
     init();
   }
@@ -54,6 +58,17 @@ export class AppService {
     } catch (error) {
       console.error(error)
     }
+  }
+  /**
+   * 초기 아바타 생성
+   */
+  async initAtavar() {
+    await this.product.create({
+      name: 'initAvatar',
+      price: 0,
+      image: "/img/user.png",
+      type: 'avatar',
+    })
   }
 }
 

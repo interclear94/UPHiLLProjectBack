@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ShopService } from './shop.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
@@ -26,6 +26,7 @@ export class ShopController {
     }
   }
 
+
   @ApiOperation({ summary: 'productList find' })
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiResponse({ status: 403, description: 'not find Resource' })
@@ -34,8 +35,8 @@ export class ShopController {
   async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number, @Req() req: Request) {
     console.log("product List");
     try {
-      const { cookies: { token } } = req;
-      const data = await this.shopService.findAll(type, page, token);
+      //const { cookies: { token } } = req;
+      const data = await this.shopService.findAll(type, page);
       return data
 
     } catch (error) {
@@ -50,8 +51,9 @@ export class ShopController {
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get("mybox/:product")
-  getMybox(@Param("product") type: string, @Query("page", ParseIntPipe) page: number) {
-    const data = this.shopService.myStorage(type, page);
+  async getMybox(@Param("product") type: string, @Query("page", ParseIntPipe) page: number, @Query('use', ParseBoolPipe) usage: boolean) {
+    console.log("test")
+    const data = await this.shopService.myStorage(type, page, usage);
     return data;
   }
 
@@ -149,7 +151,7 @@ export class ShopController {
       }
     }
   })
-  @Put("buy")
+  @Put("product/buy")
   async buy(@Req() req: Request, @Body("productId", ParseIntPipe) productId: number) {
     try {
       // const { cookies: { token } } = req;
@@ -159,6 +161,12 @@ export class ShopController {
       console.log(error);
       return false;
     }
+  }
+
+  @Put("product/complete")
+  async setUsage(@Body("orderProduct", ParseIntPipe) orderId: number) {
+    console.log(orderId)
+    return this.shopService.setUsage(orderId)
   }
 
 }
