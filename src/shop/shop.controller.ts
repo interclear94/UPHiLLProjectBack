@@ -35,8 +35,8 @@ export class ShopController {
   async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number, @Req() req: Request) {
     console.log("product List");
     try {
-      //const { cookies: { token } } = req;
-      const data = await this.shopService.findAll(type, page);
+      const { cookies: { token } } = req;
+      const data = await this.shopService.findAll(type, page, token);
       return data
 
     } catch (error) {
@@ -154,8 +154,8 @@ export class ShopController {
   @Put("product/buy")
   async buy(@Req() req: Request, @Body("productId", ParseIntPipe) productId: number) {
     try {
-      // const { cookies: { token } } = req;
-      const token = null;
+      const { cookies: { token } } = req;
+      //const token = null;
       return await this.shopService.buy(token, productId);
     } catch (error) {
       console.log(error);

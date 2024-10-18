@@ -43,10 +43,9 @@ export class ShopService {
      * @param type
      * @returns productList || null
      */
-    async findAll(type: string, page = 1 as number) {
+    async findAll(type: string, page = 1 as number, token: string) {
         try {
-            const email = 'user';
-            //const { email } = this.jwt.verify(token);
+            const { email } = this.jwt.verify(token);
             return await this.product.findAll({
                 where: { type },
                 offset: Number((page - 1) * ItemCount),
@@ -110,7 +109,7 @@ export class ShopService {
      */
     async createProduct(token: string, body: any, file: Express.Multer.File) {
         try {
-            // const verify = this.jwt.verify(token);
+            const { } = this.jwt.verify(token);
             // 권한 확인
             const isAdmin = await this.authCheck('admin');
             if (!isAdmin) {
@@ -167,8 +166,8 @@ export class ShopService {
      */
     async buy(token: string, productId: number): Promise<boolean> {
         try {
-            //const verify = this.tokenVerify(token);
-            const email = 'user'
+            const { email } = this.tokenVerify(token);
+
             const date = new Date();
             console.log(productId)
             const { dataValues: userInfo } = await this.user.findOne({ where: { email } });
@@ -207,10 +206,10 @@ export class ShopService {
         }
     }
 
-    async authCheck(userId: string) {
+    async authCheck(email: string) {
         try {
             // 권한 확인
-            const { dataValues: { authcodes: { dataValues: { dscr } } } } = await this.user.findOne({ where: { userId }, include: [AuthCode] })
+            const { dataValues: { authcodes: { dataValues: { dscr } } } } = await this.user.findOne({ where: { email }, include: [AuthCode] })
 
             if (dscr !== '관리자') {
                 return false
