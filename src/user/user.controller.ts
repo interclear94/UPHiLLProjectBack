@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema, tokenSchema } from 'src/dto/user.dto';
-import { Response } from 'express';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema, kakaoIdSchema, updateNkSchema } from 'src/dto/user.dto';
+import { Response, Request } from 'express';
 import { UserInterceptor } from './interceptor/user.interceptor';
 import { SignInPipe, SignUpPipe } from 'src/pipe/user.pipe';
 import { z } from 'zod';
@@ -13,9 +13,10 @@ type signinDTO = z.infer<typeof signinSchema>;
 type dupliCDTO = z.infer<typeof duplication>;
 type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
-type updateDTO = z.infer<typeof updatePwSchema>;
+type updaPwDTO = z.infer<typeof updatePwSchema>;
+type updaNkDTO = z.infer<typeof updateNkSchema>;
 type deleteDTO = z.infer<typeof deleteSchema>;
-type utokenDTO = z.infer<typeof tokenSchema>;
+type kakaoIDTO = z.infer<typeof kakaoIdSchema>;
 
 @Controller('user')
 export class UserController {
@@ -53,7 +54,7 @@ export class UserController {
   }
 
   // 로그인
-  @Post("/signin")
+  @Post("signin")
   @ApiTags("user")
   @ApiOperation({ summary: "로그인" })
   @ApiConsumes("application/json")
@@ -66,7 +67,7 @@ export class UserController {
       }
     }
   })
-  async signin(@Body(SignInPipe) signin: signinDTO, utoken: utokenDTO, @Res() res: Response) {
+  async signin(@Body(SignInPipe) signin: signinDTO, @Res() res: Response) {
     try {
       console.log('signin');
       const _result = await this.userService.signin(signin);
@@ -105,33 +106,67 @@ export class UserController {
   @Get("kakao/callback")
   @ApiTags("kakao")
   @UseGuards(AuthGuard("kakao"))
-  async kakaoLoginCallback(@Req() req: any, @Res() res: Response) {
+  async kakaoLoginCallback(@Req() req: any, @Res() res: Response, kakao: kakaoIDTO) {
     try {
-      const { user } = req;
-
       const date = new Date();
 
-      await this.userService.signup({
-        email: user.id,
-        userName: user.username,
-        nickName: user._json.properties.nickname,
-        birthDate: "2005-01-21",
-        phoneNumber: "010-1234-5678",
-        password: "",
-      })
+      const { user } = req;
 
-      const token = this.userService.userToken(user);
+      console.log(user, 'user')
+
+      // const kakaoUser = {
+      //   email: user.id,
+      //   nickName: user._json.properties.nickName,
+      //   image: null,
+      // }
+
+      // const result = {
+      //   email: _result.email,
+      //   nickName: _result.nickName,
+      //   image: _result.dataValues.avatar.dataValues.product.image,
+      //   point: _result.point,
+      //   auth: _result.authcode.dataValues.auth
+      // }
+
+      const findID = await this.userService.findKakao(user.id);
+
+      console.log(findID, 'findID')
+
+      if (!findID) {
+        await this.userService.signup({
+          email: user.id,
+          userName: user.username,
+          nickName: user._json.properties.nickname,
+          birthDate: "2005-01-21",
+          phoneNumber: "010-1234-5678",
+          password: "",
+        })
+      }
+      const findID2 = await this.userService.findKakao(user.id);
+
+      console.log(findID2)
+
+      const payload = {
+        email: findID2.email,
+        nickName: findID2.nickName,
+        image: findID2.dataValues.avatar.dataValues.product.image,
+        point: findID2.point,
+        auth: findID2.authcode.dataValues.auth
+      }
+
+      const token = this.userService.userToken(payload);
       date.setMinutes(date.getMinutes() + 30);
       res.cookie("token", token, { httpOnly: true, expires: date })
       res.redirect('http://127.0.0.1:3000/main');
 
     } catch (error) {
+      console.error(error);
       throw new BadRequestException('Kakao Controller Error')
     }
   }
 
   // 아이디 또는 닉네임 중복검사
-  @Post("/duplication")
+  @Post("duplication")
   @UseInterceptors(UserInterceptor)
   @ApiTags("user")
   @ApiOperation({ summary: "아이디 또는 닉네임 중복 검사" })
@@ -151,7 +186,7 @@ export class UserController {
   }
 
   // 아이디 찾기
-  @Post("/findid")
+  @Post("findid")
   @ApiTags("user")
   @ApiOperation({ summary: "아이디 찾기" })
   @ApiBody({
@@ -169,7 +204,7 @@ export class UserController {
   }
 
   // 비밀번호 찾기
-  @Post("/findpw")
+  @Post("findpw")
   @ApiTags("user")
   @ApiOperation({ summary: "비밀번호 찾기" })
   @ApiBody({
@@ -185,8 +220,8 @@ export class UserController {
     return data;
   }
 
-  // 비밀번호 수정
-  @Put("/findpassword")
+  // 비밀번호 변경
+  @Put("findpassword")
   @ApiTags("user")
   @ApiOperation({ summary: "비밀번호 변경" })
   @ApiBody({
@@ -198,10 +233,45 @@ export class UserController {
       }
     }
   })
-  async updatePw(@Body() updatepw: updateDTO) {
+  async updatePw(@Body() updatepw: updaPwDTO) {
     const data = await this.userService.updatePw(updatepw);
     console.log(data, 'controller');
     return data;
+  }
+
+  // 닉네임 변경
+  @Put("nickName")
+  @ApiTags("user")
+  @ApiOperation({ summary: "닉네임 수정" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        email: { type: "string" },
+        nickName: { type: "string" }
+      }
+    }
+  })
+  async updateNk(@Body() updateNk: updaNkDTO, @Req() req: Request,) {
+    // const { cookies: { token } } = req
+    const token = null;
+    const data = await this.userService.updateNk(updateNk, token);
+    console.log(data, 'controller');
+
+    return data;
+  }
+
+  // 로그아웃
+  @Post("logout")
+  @ApiTags("user")
+  @ApiOperation({ summary: "로그아웃" })
+  async logout(@Res() res: Response) {
+    try {
+      res.clearCookie('token');
+      res.redirect('http:127.0.0.1:3000');
+    } catch (error) {
+      throw new BadRequestException("Logout Error");
+    }
   }
 
   // 회원 탈퇴

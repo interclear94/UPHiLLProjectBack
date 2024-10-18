@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, tokenSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, kakaoIdSchema, updateNkSchema } from 'src/dto/user.dto';
 import { User } from 'src/model/User.Model';
 import { z } from 'zod';
 import * as bcrypt from 'bcrypt';
@@ -15,8 +15,9 @@ type signinDTO = z.infer<typeof signinSchema>;
 type dupliCDTO = z.infer<typeof duplication>;
 type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
-type updateDTO = z.infer<typeof updatePwSchema>;
-type utokenDTO = z.infer<typeof tokenSchema>;
+type updaPwDTO = z.infer<typeof updatePwSchema>;
+type updaNkDTO = z.infer<typeof updateNkSchema>;
+type kakaoIDTO = z.infer<typeof kakaoIdSchema>;
 
 @Injectable()
 export class UserService {
@@ -42,12 +43,12 @@ export class UserService {
             // console.log(hashedPassword);
             const userData = await this.userModel.create({
                 email, userName, nickName, birthDate, phoneNumber, password: hashedPassword
-            });
-            // 유저 등록시 초기 아바타 등록
+            })
             await this.avatar.create({ email });
-            return userData
+            return userData;
+
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             console.log("signup service error");
         }
     }
@@ -80,10 +81,11 @@ export class UserService {
     }
 
     /**
-     * 아이디 또는 닉네임 중복 검사
+     * 아이디 또는 닉네임 또는 연락처 중복 검사
      * @param user.userid
-     * @param user.nickname 
-     * @returns userid, nickname
+     * @param user.nickname
+     * @param user.phoneNumber
+     * @returns userid, nickname, phoneNumber
      */
     async duplication(user: dupliCDTO) {
         const Op = sequelize.Op
@@ -111,7 +113,7 @@ export class UserService {
         return null;
     }
 
-    // 아이디 찾기, 휴대폰 번호로 조회
+    // 아이디 찾기 (휴대폰 번호로 조회)
     async findId(user: findidDTO) {
         const { phoneNumber } = user
         const data = await this.userModel.findOne({ where: { phoneNumber } })
@@ -134,7 +136,7 @@ export class UserService {
     }
 
     // 비밀번호 변경
-    async updatePw(user: updateDTO) {
+    async updatePw(user: updaPwDTO) {
         const { email, password } = user
 
         const salt = 10;
@@ -145,6 +147,17 @@ export class UserService {
         return data;
     }
 
+    // 닉네임 변경
+    async updateNk(user: updaNkDTO, token: string) {
+        // const { email } = this.jwt.verify(token)
+        const { nickName, email } = user
+        const data = await this.userModel.update({ nickName }, { where: { email } })
+        console.log(data);
+
+        return data;
+    }
+
+    // 회원 탈퇴
     async deleteUser(token: string) {
         try {
             const decodedToken = this.jwt.verify(token);
@@ -161,6 +174,26 @@ export class UserService {
         }
         catch (error) {
             throw new BadRequestException(error, 'deleteUser');
+        }
+    }
+
+    // 카카오 아이디 조회
+    async findKakao(user: kakaoIDTO) {
+        try {
+            // const kakaoID = await this.userModel.findOne({ where: { email: user } });
+            const kakaoID = await this.userModel.findOne({
+                where: { email: user }, include: [{
+                    model: Avatar,
+                    include: [Product]
+                }, {
+                    model: AuthCode,
+                    as: 'authcode'
+                }]
+            });
+            return kakaoID;
+        }
+        catch (error) {
+            throw new BadRequestException('findKakao Error')
         }
     }
 
