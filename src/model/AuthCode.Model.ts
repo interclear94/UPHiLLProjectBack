@@ -7,6 +7,7 @@ import { User } from './User.Model';
 })
 
 export class AuthCode extends Model {
+
     @Column({
         type: DataType.STRING
     })

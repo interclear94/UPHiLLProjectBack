@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ShopService } from './shop.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
@@ -17,31 +17,44 @@ export class ShopController {
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get("/:product/count")
-  async getTotalItemCount(@Param('product') type: string) {
+  async getPage(@Param('product') type: string) {
     try {
-      return await this.shopService.countItem(type);
+      return await this.shopService.getPage(type);
     } catch (error) {
       console.error(error);
       return 0;
     }
   }
 
+
   @ApiOperation({ summary: 'productList find' })
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
   @Get(":product")
-  async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number) {
+  async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number, @Req() req: Request) {
     console.log("product List");
     try {
-      const limit = 12;
-      const data = await this.shopService.findAll(type, page, limit);
+      //const { cookies: { token } } = req;
+      const data = await this.shopService.findAll(type, page);
       return data
 
     } catch (error) {
       console.error(error);
       return null;
     }
+  }
+
+
+  @ApiOperation({ summary: 'productList find' })
+  @ApiResponse({ status: 200, description: 'find success' })
+  @ApiResponse({ status: 403, description: 'not find Resource' })
+  @ApiParam({ name: 'product', type: 'string', description: 'product type' })
+  @Get("mybox/:product")
+  async getMybox(@Param("product") type: string, @Query("page", ParseIntPipe) page: number, @Query('use', ParseBoolPipe) usage: boolean) {
+    console.log("test")
+    const data = await this.shopService.myStorage(type, page, usage);
+    return data;
   }
 
   @Get("detail/:id")
@@ -138,7 +151,7 @@ export class ShopController {
       }
     }
   })
-  @Put("buy")
+  @Put("product/buy")
   async buy(@Req() req: Request, @Body("productId", ParseIntPipe) productId: number) {
     try {
       // const { cookies: { token } } = req;
@@ -148,6 +161,12 @@ export class ShopController {
       console.log(error);
       return false;
     }
+  }
+
+  @Put("product/complete")
+  async setUsage(@Body("orderProduct", ParseIntPipe) orderId: number) {
+    console.log(orderId)
+    return this.shopService.setUsage(orderId)
   }
 
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Put, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Avatar } from 'src/model/Avatar.Model';
 import { Product } from 'src/model/Product.Model';
@@ -9,6 +9,8 @@ import { AuthCode } from 'src/model/AuthCode.Model';
 import { rmSync, readFileSync } from 'fs'
 import { Sequelize } from 'sequelize-typescript';
 import { join } from 'path';
+
+const ItemCount = 12;
 
 @Injectable()
 export class ShopService {
@@ -25,9 +27,10 @@ export class ShopService {
      * @param type 
      * @returns 
      */
-    async countItem(type: string) {
+    async getPage(type: string) {
         try {
-            return await this.product.count({ where: { type } })
+            const totalPage = Math.ceil(await this.product.count({ where: { type } }) / ItemCount);
+            return totalPage;
         } catch (error) {
             console.error(error);
             return 0;
@@ -40,9 +43,45 @@ export class ShopService {
      * @param type
      * @returns productList || null
      */
-    async findAll(type: string, page = 1 as number, limit = 12 as number) {
+    async findAll(type: string, page = 1 as number) {
         try {
-            return await this.product.findAll({ attributes: ['id', 'name', 'price', 'image'], where: { type }, offset: Number((page - 1) * limit), limit });
+            const email = 'user';
+            //const { email } = this.jwt.verify(token);
+            return await this.product.findAll({
+                where: { type },
+                offset: Number((page - 1) * ItemCount),
+                limit: ItemCount,
+                include: [{
+                    model: Order,
+                    required: false,
+                    where: { email }
+                }]
+            });
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    }
+    /**
+     * 유저가 보유한 상품
+     * @param type
+     * @returns productList || null
+     */
+    async myStorage(type: string, page = 1 as number, usage: boolean) {
+        try {
+            //const { email } = this.jwt.verify(token);
+            console.log(usage)
+            const data = await this.order.findAll({
+                where: { email: 'user', usage },
+                offset: Number((page - 1) * ItemCount),
+                limit: ItemCount,
+                include: [{
+                    model: Product,
+                    where: { type },
+                }],
+            });
+            console.log(data)
+            return data;
         } catch (error) {
             console.error(error);
             return null;
@@ -97,7 +136,7 @@ export class ShopService {
             if (file) {
                 body.img = file.filename;
             }
-            await this.product.update(body, { where: body.productId });
+            await this.product.update(body, { where: { id: body.productId } });
             return true;
         } catch (error) {
             console.error(error);
@@ -128,20 +167,21 @@ export class ShopService {
      */
     async buy(token: string, productId: number): Promise<boolean> {
         try {
-            const verify = this.tokenVerify(token);
-
+            //const verify = this.tokenVerify(token);
+            const email = 'user'
             const date = new Date();
-            const { dataValues: userInfo } = await this.user.findOne({ where: { id: verify.id } });
+            console.log(productId)
+            const { dataValues: userInfo } = await this.user.findOne({ where: { email } });
             const { dataValues: productInfo } = await this.product.findOne({ where: { id: productId } });
-
+            console.log(productInfo.id)
             // 상품 구매에 의한 사용자 포인트 차감
-            await this.user.update({ point: parseInt(userInfo.point) - parseInt(productInfo.price) }, { where: { id: verify.id } })
+            await this.user.update({ point: parseInt(userInfo.point) - parseInt(productInfo.price) }, { where: { email } })
 
             // 구매내역 추가
             await this.order.create({
-                userid: verify.userId,
+                email,
                 data: date,
-                productId: parseInt(productInfo.id),
+                productid: productInfo.id,
                 price: parseInt(productInfo.price),
             })
 
@@ -179,5 +219,8 @@ export class ShopService {
         } catch (error) {
             console.error(error);
         }
+    }
+    async setUsage(orderId: number) {
+        this.order.update({ usage: true }, { where: { id: orderId } })
     }
 }

@@ -31,6 +31,7 @@ export class User extends Model {
     })
     birthDate: Date
 
+    @Unique
     @Column({
         type: DataType.STRING
     })
