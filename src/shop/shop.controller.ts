@@ -101,7 +101,6 @@ export class ShopController {
     }
   }
 
-
   @Put(":product")
   @ApiOperation({ summary: 'product info update' })
   @ApiConsumes("multipart/form-data")
@@ -169,4 +168,16 @@ export class ShopController {
     return this.shopService.setUsage(orderId)
   }
 
+  @Put("avatar/update")
+  async setAvatar(@Body("productId", ParseIntPipe) productid: number, @Req() req) {
+    try {
+
+      const { cookies: { token } } = req;
+      await this.shopService.setAvatar(token, productid);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
 }

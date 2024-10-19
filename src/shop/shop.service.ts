@@ -45,7 +45,8 @@ export class ShopService {
      */
     async findAll(type: string, page = 1 as number, token: string) {
         try {
-            const { email } = this.jwt.verify(token);
+            console.log(process.env.JWT_KEY)
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
             return await this.product.findAll({
                 where: { type },
                 offset: Number((page - 1) * ItemCount),
@@ -198,7 +199,7 @@ export class ShopService {
      */
     tokenVerify(token: string): any {
         try {
-            const userInfo = this.jwt.verify(token);
+            const userInfo = this.jwt.verify(token, { secret: process.env.JWT_KEY });
             return userInfo;
         } catch (error) {
             console.log(error);
@@ -221,5 +222,38 @@ export class ShopService {
     }
     async setUsage(orderId: number) {
         this.order.update({ usage: true }, { where: { id: orderId } })
+    }
+
+    /**
+     * 착용중인 아바타 변경
+     * @param token 
+     * @param productid 
+     */
+    async setAvatar(token: string, productid: number) {
+        try {
+            console.log(process.env.JWT_KEY, "!!!!")
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
+
+            // 기존 착용중인 아바타 조회
+            const data = await this.order.findOne({
+                where: { email, usage: true },
+                include: [{
+                    model: Product,
+                    where: { type: 'avatar' }
+                }]
+            })
+
+            console.log(data)
+            // 착용중인 아바타가 있으면 착용해제
+            if (data) {
+                const { id } = data;
+                await this.order.update({ usage: false }, { where: { id } });
+            }
+            await this.avatar.update({ productid }, { where: { email } })
+            await this.order.update({ usage: true }, { where: { email, productid } })
+            console.log("변경완료");
+        } catch (error) {
+            console.error(error)
+        }
     }
 }
