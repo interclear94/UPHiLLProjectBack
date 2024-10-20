@@ -2,11 +2,27 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+const dotenv = require('dotenv')
+import { join } from 'path';
 
+dotenv.config();
+
+if (process.env.NODE_ENV === "production") {
+  console.log("1")
+  dotenv.config({ path: join(__dirname, "..", ".env.production") })
+} else {
+  console.log(2)
+  dotenv.config({ path: join(__dirname, "..", ".env.develop") })
+}
+console.log(1234)
+
+// dotenv.config({
+//   path: process.env.NODE_ENV === "production" ? "../.env.production" : "../.env.develop"
+// })
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: ["http://127.0.0.1:3000"],
+    origin: [process.env.HOST],
     methods: ["POST", "GET", "PUT", "DELETE"],
     credentials: true
   })
