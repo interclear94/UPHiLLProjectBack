@@ -67,12 +67,12 @@ export class ShopService {
      * @param type
      * @returns productList || null
      */
-    async myStorage(type: string, page = 1 as number, usage: boolean) {
+    async myStorage(type: string, page = 1 as number, usage: boolean, token: string) {
         try {
-            //const { email } = this.jwt.verify(token);
-            console.log(usage)
+            const { email } = this.jwt.verify(token);
+
             const data = await this.order.findAll({
-                where: { email: 'user', usage },
+                where: { email, usage },
                 offset: Number((page - 1) * ItemCount),
                 limit: ItemCount,
                 include: [{
@@ -110,9 +110,9 @@ export class ShopService {
      */
     async createProduct(token: string, body: any, file: Express.Multer.File) {
         try {
-            const { } = this.jwt.verify(token);
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
             // 권한 확인
-            const isAdmin = await this.authCheck('admin');
+            const isAdmin = await this.authCheck(email);
             if (!isAdmin) {
                 throw new UnauthorizedException("current user is not admin");
             }
@@ -131,10 +131,16 @@ export class ShopService {
      * @Param file
      * @returns boolean
      */
-    async updateProduct(body: any, file?: Express.Multer.File) {
+    async updateProduct(body: any, token: string, file?: Express.Multer.File) {
         try {
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
+            // 권한 확인
+            const isAdmin = await this.authCheck(email);
+            if (!isAdmin) {
+                throw new UnauthorizedException("current user is not admin");
+            }
             if (file) {
-                body.img = file.filename;
+                body.image = "/img/" + file.filename;
             }
             await this.product.update(body, { where: { id: body.productId } });
             return true;
@@ -149,8 +155,15 @@ export class ShopService {
      * @param id 
      * @returns boolean
      */
-    async deleteProduct(id: number): Promise<boolean> {
+    async deleteProduct(id: number, token: string): Promise<boolean> {
         try {
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
+            // 권한 확인
+            // const isAdmin = await this.authCheck(email);
+            // if (!isAdmin) {
+            //     throw new UnauthorizedException("current user is not admin");
+            // }
+            await this.order.destroy({ where: { email, productid: id } });
             await this.product.destroy({ where: { id } });
             return true;
         } catch (e) {
@@ -210,9 +223,9 @@ export class ShopService {
     async authCheck(email: string) {
         try {
             // 권한 확인
-            const { dataValues: { authcodes: { dataValues: { dscr } } } } = await this.user.findOne({ where: { email }, include: [AuthCode] })
-
-            if (dscr !== '관리자') {
+            const { authcode: { auth } } = await this.user.findOne({ where: { email }, include: [AuthCode] })
+            console.log(auth)
+            if (parseInt(auth) !== 2) {
                 return false
             }
             return true
