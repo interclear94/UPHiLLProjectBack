@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, kakaoIdSchema, updateNkSchema } from 'src/dto/user.dto';
 import { User } from 'src/model/User.Model';
 import { z } from 'zod';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import sequelize from 'sequelize';
 import { Avatar } from 'src/model/Avatar.Model';
 import { Product } from 'src/model/Product.Model';
@@ -149,8 +149,8 @@ export class UserService {
 
     // 닉네임 변경
     async updateNk(user: updaNkDTO, token: string) {
-        // const { email } = this.jwt.verify(token)
-        const { nickName, email } = user
+        const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY })
+        const { nickName } = user;
         const data = await this.userModel.update({ nickName }, { where: { email } })
         console.log(data);
 
@@ -200,11 +200,44 @@ export class UserService {
     // 유저 토큰
     userToken(token: any) {
         // 토큰 생성
-        return this.jwt.sign(token, { expiresIn: 60 * 30 * 1000 });
+        return this.jwt.sign(token, { expiresIn: 60 * 30 * 1000, secret: process.env.JWT_KEY });
     }
 
     // 토큰 복호화
     verifyToken(jwt: string) {
         return this.jwt.verify(jwt);
+    }
+
+    async getUserInfo(token: string) {
+        try {
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
+            const data = await this.userModel.findOne({
+                attributes: ["email", "nickName", "point"],
+                where: { email },
+                include: [{
+                    model: AuthCode,
+                    attributes: ["auth"],
+                    as: "authcode"
+                }, {
+                    model: Avatar,
+                    include: [{
+                        model: Product,
+                        attributes: ["image"]
+                    }]
+                }
+                ],
+            });
+            const obj = {
+                email: data.email,
+                nickName: data.nickName,
+                point: data.point,
+                auth: data.authcode.auth,
+                image: data.avatar.product.image
+            };
+            console.log(obj)
+            return obj;
+        } catch (error) {
+            console.error(error);
+        }
     }
 }

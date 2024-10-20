@@ -180,6 +180,7 @@ export class UserController {
     }
   })
   async duplication(@Body() duplication: dupliCDTO) {
+    console.log("!!!!!")
     const data = await this.userService.duplication(duplication);
     console.log(data, 'controller');
     return data;
@@ -253,8 +254,8 @@ export class UserController {
     }
   })
   async updateNk(@Body() updateNk: updaNkDTO, @Req() req: Request,) {
-    // const { cookies: { token } } = req
-    const token = null;
+    const { cookies: { token } } = req
+    //const token = null;
     const data = await this.userService.updateNk(updateNk, token);
     console.log(data, 'controller');
 
@@ -301,6 +302,16 @@ export class UserController {
       return res.json(result);
     } catch (error) {
       throw new BadRequestException(error, 'deleteUser')
+    }
+  }
+
+  @Post("userinfo")
+  async getUserInfo(@Req() req: Request) {
+    try {
+      const { cookies: { token } } = req;
+      return await this.userService.getUserInfo(token);
+    } catch (error) {
+      console.error(error);
     }
   }
 }
