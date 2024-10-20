@@ -69,7 +69,7 @@ export class ShopService {
      */
     async myStorage(type: string, page = 1 as number, usage: boolean, token: string) {
         try {
-            const { email } = this.jwt.verify(token);
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
 
             const data = await this.order.findAll({
                 where: { email, usage },
