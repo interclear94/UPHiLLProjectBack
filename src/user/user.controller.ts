@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, ParseIntPipe, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema, kakaoIdSchema, updateNkSchema } from 'src/dto/user.dto';
 import { Response, Request } from 'express';
@@ -180,7 +180,6 @@ export class UserController {
     }
   })
   async duplication(@Body() duplication: dupliCDTO) {
-    console.log("!!!!!")
     const data = await this.userService.duplication(duplication);
     console.log(data, 'controller');
     return data;
@@ -310,6 +309,16 @@ export class UserController {
     try {
       const { cookies: { token } } = req;
       return await this.userService.getUserInfo(token);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  @Get("order")
+  async getMyOrder(@Query("page", ParseIntPipe) page: number, @Req() req: Request) {
+    try {
+      const { cookies: { token } } = req;
+      return await this.userService.getMyOrder(page, token);
     } catch (error) {
       console.error(error);
     }

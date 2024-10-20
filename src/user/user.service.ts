@@ -9,6 +9,7 @@ import sequelize from 'sequelize';
 import { Avatar } from 'src/model/Avatar.Model';
 import { Product } from 'src/model/Product.Model';
 import { AuthCode } from 'src/model/AuthCode.Model';
+import { Order } from 'src/model/Order.model';
 
 type signupDTO = z.infer<typeof signupSchema>;
 type signinDTO = z.infer<typeof signinSchema>;
@@ -24,6 +25,7 @@ export class UserService {
     constructor(
         @InjectModel(User) private readonly userModel: typeof User,
         @InjectModel(Avatar) private readonly avatar: typeof Avatar,
+        @InjectModel(Order) private readonly order: typeof Order,
         private readonly jwt: JwtService) { }
 
     // 유저 회원가입
@@ -238,6 +240,30 @@ export class UserService {
             return obj;
         } catch (error) {
             console.error(error);
+        }
+    }
+    /**
+     * 유저의 구매항목을 조회
+     * @param token 
+     */
+    async getMyOrder(page: number, token: string) {
+        try {
+            const itemCount = 12;
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY })
+            const data = await this.order.findAll({
+                where: { email },
+                order: [["createdAt", "desc"]],
+                offset: Number((page - 1) * itemCount),
+                limit: itemCount,
+                include: [{
+                    model: Product,
+                }]
+            })
+            console.log(data);
+            return data;
+        } catch (error) {
+            console.error(error);
+            return error;
         }
     }
 }
