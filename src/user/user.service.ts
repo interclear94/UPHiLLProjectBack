@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, kakaoIdSchema, updateNkSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, kakaoIdSchema, updateNkSchema, pointStackSchema } from 'src/dto/user.dto';
 import { User } from 'src/model/User.Model';
 import { z } from 'zod';
 import * as bcrypt from 'bcrypt';
@@ -18,6 +18,7 @@ type findpwDTO = z.infer<typeof findpwSchema>;
 type updaPwDTO = z.infer<typeof updatePwSchema>;
 type updaNkDTO = z.infer<typeof updateNkSchema>;
 type kakaoIDTO = z.infer<typeof kakaoIdSchema>;
+type pointSDTO = z.infer<typeof pointStackSchema>;
 
 @Injectable()
 export class UserService {
@@ -69,6 +70,7 @@ export class UserService {
             });
 
             const upw = await bcrypt.compare(password, user.password);
+
             if (upw === false) {
                 throw new BadRequestException(2);
             }
@@ -76,7 +78,7 @@ export class UserService {
             return user;
 
         } catch (error) {
-            console.error(error)
+            throw new BadRequestException(error, "service error")
         }
     }
 
@@ -136,21 +138,26 @@ export class UserService {
     }
 
     // 비밀번호 변경
-    async updatePw(user: updaPwDTO) {
-        const { email, password } = user
+    async updatePw(user: updaPwDTO, token: string) {
+        try {
+            const { password } = user
+            const { email } = this.jwt.verify(token)
 
-        const salt = 10;
-        const hashedPassword = await bcrypt.hash(password, salt);
-        console.log(hashedPassword, 'hash');
-        const data = await this.userModel.update({ password: hashedPassword }, { where: { email } })
-        console.log(data, 'service');
-        return data;
+            const salt = 10;
+            const hashedPassword = await bcrypt.hash(password, salt);
+            console.log(hashedPassword, 'hash');
+            const data = await this.userModel.update({ password: hashedPassword }, { where: { email } })
+            console.log(data, 'service');
+            return data;
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     // 닉네임 변경
     async updateNk(user: updaNkDTO, token: string) {
-        // const { email } = this.jwt.verify(token)
-        const { nickName, email } = user
+        const { nickName } = user
+        const { email } = this.jwt.verify(token)
         const data = await this.userModel.update({ nickName }, { where: { email } })
         console.log(data);
 
@@ -160,9 +167,7 @@ export class UserService {
     // 회원 탈퇴
     async deleteUser(token: string) {
         try {
-            const decodedToken = this.jwt.verify(token);
-            console.log(decodedToken);
-            const email = decodedToken.email;
+            const { email } = this.jwt.verify(token);
 
             const result = await this.userModel.destroy({ where: { email } })
 
@@ -170,7 +175,7 @@ export class UserService {
                 throw new BadRequestException('유저를 찾을 수 없습니다.')
             }
 
-            return { success: true, message: "회원 탈퇴가 완료되었습니다." };
+            return result;
         }
         catch (error) {
             throw new BadRequestException(error, 'deleteUser');
@@ -194,6 +199,29 @@ export class UserService {
         }
         catch (error) {
             throw new BadRequestException('findKakao Error')
+        }
+    }
+
+    // 포인트 적립
+    async pointStack(addPoint: pointSDTO, token: string) {
+        try {
+            const { point } = addPoint;
+            const { email } = this.jwt.verify(token);
+
+            const user = await this.userModel.findOne({ where: { email } })
+
+            let userPoint = user.point || 0;
+            userPoint += point;
+            // console.log(userPoint, 'userPoint')
+
+            const AddPoint = await this.userModel.update({ point: userPoint }, { where: { email } })
+            // console.log(AddPoint, 'service pointStack');
+
+            return AddPoint;
+
+        } catch (error) {
+            console.error(error, 'pointStack Service Error');
+            throw new BadRequestException('pointStack Error')
         }
     }
 

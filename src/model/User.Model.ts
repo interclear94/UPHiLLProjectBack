@@ -50,6 +50,8 @@ export class User extends Model {
     auth: number;
 
     @BelongsTo(() => AuthCode, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         foreignKey: 'auth',
         targetKey: 'id'
     })

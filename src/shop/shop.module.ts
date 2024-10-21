@@ -11,17 +11,21 @@ import { Order } from 'src/model/Order.model';
 import { MulterModule } from '@nestjs/platform-express';
 import { ProductInfoPipe } from 'src/shop/pipe/product.pipe';
 import { AuthCode } from 'src/model/AuthCode.Model';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Avatar, Product, User, Order, AuthCode]), JwtModule.register({
-    secret: process.env.JWT_KEY,
-    signOptions: {
-      expiresIn: "30m"
-    }
-  }),
-  MulterModule.registerAsync({
-    useClass: UploadService
-  })],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    SequelizeModule.forFeature([Avatar, Product, User, Order, AuthCode]),
+    JwtModule.register({
+      secret: process.env.JWT_KEY,
+      signOptions: {
+        expiresIn: "30m"
+      }
+    }),
+    MulterModule.registerAsync({
+      useClass: UploadService
+    })],
   controllers: [ShopController],
   providers: [ShopService, ProductInfoPipe],
 })

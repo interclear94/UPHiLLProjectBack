@@ -15,6 +15,8 @@ export class Order extends Model {
     email: string;
 
     @BelongsTo(() => User, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         foreignKey: 'email',
         targetKey: 'email'
     })
@@ -32,6 +34,8 @@ export class Order extends Model {
     productid: number;
 
     @BelongsTo(() => Product, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         targetKey: 'id',
         foreignKey: 'productid'
     })
