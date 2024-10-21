@@ -15,6 +15,8 @@ export class Avatar extends Model {
     email: string
 
     @BelongsTo(() => User, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         targetKey: "email",
         foreignKey: "email"
     })
@@ -27,6 +29,8 @@ export class Avatar extends Model {
     productid: number;
 
     @BelongsTo(() => Product, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
         targetKey: "id",
         foreignKey: "productid"
     })
