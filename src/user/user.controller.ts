@@ -3,7 +3,7 @@ import { UserService } from './user.service';
 import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, updateNkSchema, pointStackSchema } from 'src/dto/user.dto';
 import { Response, Request } from 'express';
 import { UserInterceptor } from './interceptor/user.interceptor';
-import { dupliCPipe, findIDPipe, findPWPipe, pointStackPipe, SignInPipe, SignUpPipe, updateNkPipe, updatePwPipe } from 'src/pipe/user.pipe';
+import { SignUpPipe, SignInPipe } from 'src/pipe/user.pipe';
 import { z } from 'zod';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -114,7 +114,11 @@ export class UserController {
 
       const { user } = req;
 
-      // console.log(user, 'user')
+      const random1 = Math.floor(Math.random() * 9000) + 1000;
+      const random2 = Math.floor(Math.random() * 9000) + 1000;
+
+      const phoneNumber = '010' + '-' + random1 + '-' + random2
+      console.log(phoneNumber, 'phoneNumber')
 
       const findID = await this.userService.findKakao(user.id);
 
@@ -126,12 +130,14 @@ export class UserController {
           userName: user.username,
           nickName: user._json.properties.nickname,
           birthDate: "2005-01-21",
-          phoneNumber: "010-1234-5678",
+          phoneNumber,
           password: "",
         })
       }
 
       const findID2 = await this.userService.findKakao(user.id);
+
+      // console.log(findID2, 'findID2');
 
       const payload = {
         email: findID2.email,
@@ -166,7 +172,7 @@ export class UserController {
       }
     }
   })
-  async duplication(@Body(dupliCPipe) duplication: dupliCDTO) {
+  async duplication(@Body() duplication: dupliCDTO) {
     const data = await this.userService.duplication(duplication);
     console.log(data, 'controller');
     return data;
@@ -184,7 +190,7 @@ export class UserController {
       }
     }
   })
-  async findId(@Body(findIDPipe) findid: findidDTO) {
+  async findId(@Body() findid: findidDTO) {
     const data = await this.userService.findId(findid)
     console.log(data);
     return data;
@@ -202,7 +208,7 @@ export class UserController {
       }
     }
   })
-  async findpw(@Body(findPWPipe) findpw: findpwDTO) {
+  async findpw(@Body() findpw: findpwDTO) {
     const data = await this.userService.findPw(findpw);
     return data;
   }
@@ -220,7 +226,7 @@ export class UserController {
       }
     }
   })
-  async updatePw(@Body(updatePwPipe) updatepw: updaPwDTO, @Req() req: Request) {
+  async updatePw(@Body() updatepw: updaPwDTO, @Req() req: Request) {
     try {
       const { cookies: { token } } = req
       const data = await this.userService.updatePw(updatepw, token);
@@ -244,7 +250,7 @@ export class UserController {
       }
     }
   })
-  async updateNk(@Body(updateNkPipe) updateNk: updaNkDTO, @Req() req: Request) {
+  async updateNk(@Body() updateNk: updaNkDTO, @Req() req: Request) {
     const { cookies: { token } } = req
     const data = await this.userService.updateNk(updateNk, token);
     console.log(data, 'controller');
@@ -297,7 +303,7 @@ export class UserController {
       }
     }
   })
-  async pointStack(@Body(pointStackPipe) addPoint: pointSDTO, @Req() req: Request) {
+  async pointStack(@Body() addPoint: pointSDTO, @Req() req: Request) {
     try {
       // console.log(addPoint, 'controller');
       const { cookies: { token } } = req;
@@ -328,5 +334,16 @@ export class UserController {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  @Get("token")
+  async isToken(@Req() req: Request, @Res() res: Response) {
+    const { cookies: { token } } = req;
+
+    if (!token) {
+      return res.redirect('http://127.0.0.1:3000');
+    }
+
+    res.send('정상 로그인 되어 있으시네요 !');
   }
 }
