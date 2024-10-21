@@ -1,9 +1,9 @@
 import { BadRequestException, Body, Controller, Delete, Get, ParseIntPipe, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, deleteSchema, kakaoIdSchema, updateNkSchema } from 'src/dto/user.dto';
+import { signupSchema, signinSchema, findidSchema, duplication, findpwSchema, updatePwSchema, updateNkSchema, pointStackSchema } from 'src/dto/user.dto';
 import { Response, Request } from 'express';
 import { UserInterceptor } from './interceptor/user.interceptor';
-import { SignInPipe, SignUpPipe } from 'src/pipe/user.pipe';
+import { dupliCPipe, findIDPipe, findPWPipe, pointStackPipe, SignInPipe, SignUpPipe, updateNkPipe, updatePwPipe } from 'src/pipe/user.pipe';
 import { z } from 'zod';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -15,8 +15,7 @@ type findidDTO = z.infer<typeof findidSchema>;
 type findpwDTO = z.infer<typeof findpwSchema>;
 type updaPwDTO = z.infer<typeof updatePwSchema>;
 type updaNkDTO = z.infer<typeof updateNkSchema>;
-type deleteDTO = z.infer<typeof deleteSchema>;
-type kakaoIDTO = z.infer<typeof kakaoIdSchema>;
+type pointSDTO = z.infer<typeof pointStackSchema>;
 
 @Controller('user')
 export class UserController {
@@ -72,12 +71,14 @@ export class UserController {
       console.log('signin');
       const _result = await this.userService.signin(signin);
 
+      console.log(_result, '_result');
+
       const result = {
         email: _result.email,
         nickName: _result.nickName,
-        image: _result.dataValues.avatar.dataValues.product.image,
+        image: _result.avatar.product.image,
         point: _result.point,
-        auth: _result.authcode.dataValues.auth
+        auth: _result.authcode.auth
       }
 
       const token = this.userService.userToken(result);
@@ -89,7 +90,8 @@ export class UserController {
       res.json(result)
 
     } catch (error) {
-      if (error.response === 2) {
+      // console.error(error.response.response, 'controller error');
+      if (error.response.response === 2) {
         throw new BadRequestException('비밀번호가 맞지 않습니다.');
       }
       throw new BadRequestException('없는 유저 입니다.');
@@ -106,31 +108,17 @@ export class UserController {
   @Get("kakao/callback")
   @ApiTags("kakao")
   @UseGuards(AuthGuard("kakao"))
-  async kakaoLoginCallback(@Req() req: any, @Res() res: Response, kakao: kakaoIDTO) {
+  async kakaoLoginCallback(@Req() req: any, @Res() res: Response) {
     try {
       const date = new Date();
 
       const { user } = req;
 
-      console.log(user, 'user')
-
-      // const kakaoUser = {
-      //   email: user.id,
-      //   nickName: user._json.properties.nickName,
-      //   image: null,
-      // }
-
-      // const result = {
-      //   email: _result.email,
-      //   nickName: _result.nickName,
-      //   image: _result.dataValues.avatar.dataValues.product.image,
-      //   point: _result.point,
-      //   auth: _result.authcode.dataValues.auth
-      // }
+      // console.log(user, 'user')
 
       const findID = await this.userService.findKakao(user.id);
 
-      console.log(findID, 'findID')
+      // console.log(findID, 'findID')
 
       if (!findID) {
         await this.userService.signup({
@@ -142,16 +130,15 @@ export class UserController {
           password: "",
         })
       }
-      const findID2 = await this.userService.findKakao(user.id);
 
-      console.log(findID2)
+      const findID2 = await this.userService.findKakao(user.id);
 
       const payload = {
         email: findID2.email,
         nickName: findID2.nickName,
-        image: findID2.dataValues.avatar.dataValues.product.image,
+        image: findID2.avatar.product.image,
         point: findID2.point,
-        auth: findID2.authcode.dataValues.auth
+        auth: findID2.authcode.auth
       }
 
       const token = this.userService.userToken(payload);
@@ -165,7 +152,7 @@ export class UserController {
     }
   }
 
-  // 아이디 또는 닉네임 중복검사
+  // 아이디 또는 닉네임 또는 휴대폰 중복검사
   @Post("duplication")
   @UseInterceptors(UserInterceptor)
   @ApiTags("user")
@@ -179,7 +166,7 @@ export class UserController {
       }
     }
   })
-  async duplication(@Body() duplication: dupliCDTO) {
+  async duplication(@Body(dupliCPipe) duplication: dupliCDTO) {
     const data = await this.userService.duplication(duplication);
     console.log(data, 'controller');
     return data;
@@ -197,7 +184,7 @@ export class UserController {
       }
     }
   })
-  async findId(@Body() findid: findidDTO) {
+  async findId(@Body(findIDPipe) findid: findidDTO) {
     const data = await this.userService.findId(findid)
     console.log(data);
     return data;
@@ -215,7 +202,7 @@ export class UserController {
       }
     }
   })
-  async findpw(@Body() findpw: findpwDTO) {
+  async findpw(@Body(findPWPipe) findpw: findpwDTO) {
     const data = await this.userService.findPw(findpw);
     return data;
   }
@@ -228,33 +215,37 @@ export class UserController {
     schema: {
       type: "object",
       properties: {
-        email: { type: "string" },
-        password: { type: "string" }
+        password: { type: "string" },
+        checkpassword: { type: "string" }
       }
     }
   })
-  async updatePw(@Body() updatepw: updaPwDTO) {
-    const data = await this.userService.updatePw(updatepw);
-    console.log(data, 'controller');
-    return data;
+  async updatePw(@Body(updatePwPipe) updatepw: updaPwDTO, @Req() req: Request) {
+    try {
+      const { cookies: { token } } = req
+      const data = await this.userService.updatePw(updatepw, token);
+
+      console.log(data, 'controller');
+      return data;
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   // 닉네임 변경
   @Put("nickName")
   @ApiTags("user")
-  @ApiOperation({ summary: "닉네임 수정" })
+  @ApiOperation({ summary: "닉네임 변경" })
   @ApiBody({
     schema: {
       type: "object",
       properties: {
-        email: { type: "string" },
         nickName: { type: "string" }
       }
     }
   })
-  async updateNk(@Body() updateNk: updaNkDTO, @Req() req: Request,) {
+  async updateNk(@Body(updateNkPipe) updateNk: updaNkDTO, @Req() req: Request) {
     const { cookies: { token } } = req
-    //const token = null;
     const data = await this.userService.updateNk(updateNk, token);
     console.log(data, 'controller');
 
@@ -278,29 +269,44 @@ export class UserController {
   @Delete("delete")
   @ApiTags("user")
   @ApiOperation({ summary: "회원 탈퇴" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        token: { type: "string" }
-      }
-    }
-  })
-  async deleteUser(@Body() deleteUser: deleteDTO, @Res() res: Response) {
+  async deleteUser(@Req() req: Request, @Res() res: Response) {
     try {
-      const { token } = deleteUser;
-      console.log(token);
+      const { cookies: { token } } = req
 
       if (!token) {
         throw new BadRequestException('토큰이 없습니다.')
       }
 
-      const result = await this.userService.deleteUser(token);
+      await this.userService.deleteUser(token);
 
       res.clearCookie('token');
-      return res.json(result);
+      res.redirect('http://127.0.0.1:3000');
     } catch (error) {
       throw new BadRequestException(error, 'deleteUser')
+    }
+  }
+
+  @Post("pointstack")
+  @ApiTags("user")
+  @ApiOperation({ summary: "포인트 적립" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        point: { type: "number" }
+      }
+    }
+  })
+  async pointStack(@Body(pointStackPipe) addPoint: pointSDTO, @Req() req: Request) {
+    try {
+      // console.log(addPoint, 'controller');
+      const { cookies: { token } } = req;
+      const data = await this.userService.pointStack(addPoint, token);
+      console.log(data, 'controller pointStack');
+      return data;
+    } catch (error) {
+      console.error(error, 'constroller pointstack')
+      throw new BadRequestException('pointStack Error')
     }
   }
 

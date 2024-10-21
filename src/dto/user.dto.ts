@@ -37,7 +37,6 @@ export const findpwSchema = z.object({
 })
 
 export const updatePwSchema = z.object({
-    email: z.string().regex(emailRegex),
     password: z.string().regex(passwordRegex)
 })
 
@@ -46,10 +45,10 @@ export const updateNkSchema = z.object({
     nickName: z.string().regex(nickNameRegex)
 })
 
-export const deleteSchema = z.object({
-    token: z.string()
-})
-
 export const kakaoIdSchema = z.object({
     email: z.string()
+})
+
+export const pointStackSchema = z.object({
+    point: z.number()
 })
