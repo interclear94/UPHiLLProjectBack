@@ -228,7 +228,7 @@ export class UserService {
     }
 
     // 유저 토큰
-    userToken(token: any) {
+    userToken(token: object) {
         // 토큰 생성
         return this.jwt.sign(token, { expiresIn: 60 * 30 * 1000, secret: process.env.JWT_KEY });
     }
@@ -236,6 +236,14 @@ export class UserService {
     // 토큰 복호화
     verifyToken(jwt: string) {
         return this.jwt.verify(jwt);
+    }
+
+    // 토큰이 있는지 체크
+    isToken(token: string) {
+        if (!token) {
+            return '토큰이 없어용'
+        }
+        return token;
     }
 
     async getUserInfo(token: string) {
@@ -264,7 +272,7 @@ export class UserService {
                 auth: data.authcode.auth,
                 image: data.avatar.product.image
             };
-            console.log(obj)
+            // console.log(obj)
             return obj;
         } catch (error) {
             console.error(error);
