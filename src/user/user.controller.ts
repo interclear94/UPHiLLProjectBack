@@ -286,12 +286,13 @@ export class UserController {
       await this.userService.deleteUser(token);
 
       res.clearCookie('token');
-      res.redirect('http://127.0.0.1:3000');
+      res.end();
     } catch (error) {
       throw new BadRequestException(error, 'deleteUser')
     }
   }
 
+  // 포인트 적립
   @Post("pointstack")
   @ApiTags("user")
   @ApiOperation({ summary: "포인트 적립" })
@@ -316,6 +317,7 @@ export class UserController {
     }
   }
 
+  // 유저 정보
   @Post("userinfo")
   async getUserInfo(@Req() req: Request) {
     try {
@@ -326,6 +328,7 @@ export class UserController {
     }
   }
 
+  // 주문 내역
   @Get("order")
   async getMyOrder(@Query("page", ParseIntPipe) page: number, @Req() req: Request) {
     try {
@@ -336,6 +339,7 @@ export class UserController {
     }
   }
 
+  // 토큰 여부
   @Get("token")
   async isToken(@Req() req: Request, @Res() res: Response) {
     const { cookies: { token } } = req;
