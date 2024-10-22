@@ -169,7 +169,7 @@ export class UserService {
     // 회원 탈퇴
     async deleteUser(token: string) {
         try {
-            const { email } = this.jwt.verify(token);
+            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
 
             const result = await this.userModel.destroy({ where: { email } })
 
