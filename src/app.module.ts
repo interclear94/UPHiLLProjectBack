@@ -20,7 +20,6 @@ import { GeolocationModule } from './geolocation/geolocation.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV}`
     }),
     SequelizeModule.forRoot({
       dialect: process.env.DATABASE_TYPE as Dialect,
