@@ -14,6 +14,7 @@ import { Dialect } from 'sequelize';
 import { User } from './model/User.Model';
 import { Product } from './model/Product.Model';
 import { Avatar } from './model/Avatar.Model';
+import { GeolocationModule } from './geolocation/geolocation.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { Avatar } from './model/Avatar.Model';
     }),
     ShopModule,
     UserModule,
+    GeolocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
