@@ -65,7 +65,7 @@ export class User extends Model {
 
     @Default(0)
     @Column({
-        type: DataType.INTEGER,
+        type: DataType.INTEGER.UNSIGNED
     })
     point: number;
 
