@@ -27,6 +27,7 @@ export class UserService {
         @InjectModel(User) private readonly userModel: typeof User,
         @InjectModel(Avatar) private readonly avatar: typeof Avatar,
         @InjectModel(Order) private readonly order: typeof Order,
+        @InjectModel(Product) private readonly product: typeof Product,
         private readonly jwt: JwtService) { }
 
     // 유저 회원가입
@@ -47,7 +48,8 @@ export class UserService {
             const userData = await this.userModel.create({
                 email, userName, nickName, birthDate, phoneNumber, password: hashedPassword
             })
-            await this.avatar.create({ email });
+            const { id } = await this.product.findOne({ where: { name: 'initAvatar' } })
+            await this.avatar.create({ email, productid: id });
             return userData;
 
         } catch (error) {
