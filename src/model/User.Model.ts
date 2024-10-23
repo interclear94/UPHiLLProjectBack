@@ -1,5 +1,5 @@
 import { Table, Model, Column, DataType, Default, ForeignKey, BelongsTo, HasMany, Unique, HasOne } from 'sequelize-typescript';
-import { AuthCode } from './Authcode.Model';
+import { AuthCode } from './AuthCode.Model';
 import { Avatar } from './Avatar.Model';
 import { Order } from './Order.model';
 
@@ -65,7 +65,7 @@ export class User extends Model {
 
     @Default(0)
     @Column({
-        type: DataType.INTEGER,
+        type: DataType.INTEGER.UNSIGNED
     })
     point: number;
 
