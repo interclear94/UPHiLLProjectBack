@@ -86,7 +86,7 @@ export class UserController {
       const date = new Date();
       date.setTime(date.getTime() + (5 * 60 * 60 * 1000));
 
-      res.cookie('token', token, { httpOnly: true, expires: date, sameSite: 'none', secure: true, path: '/', domain: '127.0.0.1' });
+      res.cookie('token', token, { httpOnly: true, expires: date, sameSite: 'none', secure: true, path: '/', domain: 'uphillmountain.store' });
       res.json(result)
 
     } catch (error) {
@@ -150,7 +150,7 @@ export class UserController {
       const token = this.userService.userToken(payload);
       date.setMinutes(date.getMinutes() + 30);
       res.cookie("token", token, { httpOnly: true, expires: date })
-      res.redirect('http://127.0.0.1:3000/main');
+      res.redirect('https://uphillmountain.store/main');
 
     } catch (error) {
       console.error(error);
@@ -265,7 +265,7 @@ export class UserController {
   async logout(@Res() res: Response) {
     try {
       res.clearCookie('token');
-      res.redirect('http:127.0.0.1:3000');
+      res.redirect('https://uphillmountain.store');
     } catch (error) {
       throw new BadRequestException("Logout Error");
     }
@@ -345,7 +345,7 @@ export class UserController {
     const { cookies: { token } } = req;
 
     if (!token) {
-      return res.redirect('http://127.0.0.1:3000');
+      return res.redirect('https://uphillmountain.store');
     }
 
     res.send('정상 로그인 되어 있으시네요 !');
