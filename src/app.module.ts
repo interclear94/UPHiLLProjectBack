@@ -14,12 +14,12 @@ import { Dialect } from 'sequelize';
 import { User } from './model/User.Model';
 import { Product } from './model/Product.Model';
 import { Avatar } from './model/Avatar.Model';
+import { GeolocationModule } from './geolocation/geolocation.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV}`
     }),
     SequelizeModule.forRoot({
       dialect: process.env.DATABASE_TYPE as Dialect,
@@ -48,6 +48,7 @@ import { Avatar } from './model/Avatar.Model';
     }),
     ShopModule,
     UserModule,
+    GeolocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,17 +5,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 const dotenv = require('dotenv')
 import { join } from 'path';
 
-dotenv.config();
-
-if (process.env.NODE_ENV === "production") {
-  dotenv.config({ path: join(__dirname, "..", ".env.production") })
-} else {
-  dotenv.config({ path: join(__dirname, "..", ".env.develop") })
-}
-
-// dotenv.config({
-//   path: process.env.NODE_ENV === "production" ? "../.env.production" : "../.env.develop"
-// })
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
