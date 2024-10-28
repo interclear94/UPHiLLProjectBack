@@ -8,7 +8,7 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: [process.env.HOST],
+    origin: ["https://uphillmountain.store"],
     methods: ["POST", "GET", "PUT", "DELETE"],
     credentials: true
   })

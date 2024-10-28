@@ -23,7 +23,7 @@ import { GeolocationModule } from './geolocation/geolocation.module';
     }),
     SequelizeModule.forRoot({
       dialect: process.env.DATABASE_TYPE as Dialect,
-      host: process.env.DOCKER_HOST,
+      host: process.env.DATABASE_HOST,
       port: parseInt(process.env.DATABASE_PORT),
       database: process.env.DATABASE_NAME,
       username: process.env.DATABASE_USER,

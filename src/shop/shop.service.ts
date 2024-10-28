@@ -45,8 +45,7 @@ export class ShopService {
      */
     async findAll(type: string, page = 1 as number, token: string) {
         try {
-            console.log(process.env.JWT_KEY)
-            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
+            const { email } = this.jwt.verify(token);
             return await this.product.findAll({
                 where: { type },
                 offset: Number((page - 1) * ItemCount),
@@ -69,7 +68,7 @@ export class ShopService {
      */
     async myStorage(type: string, page = 1 as number, usage: boolean, token: string) {
         try {
-            const { email } = this.jwt.verify(token, { secret: process.env.JWT_KEY });
+            const { email } = this.jwt.verify(token);
 
             const data = await this.order.findAll({
                 where: { email, usage },
@@ -116,7 +115,7 @@ export class ShopService {
             if (!isAdmin) {
                 throw new UnauthorizedException("current user is not admin");
             }
-            body.image = `/imgs/${file.filename}`
+            body.image = `/img/${file.filename}`
             await this.product.create(body);
             console.log("success insert");
         } catch (error) {
@@ -225,7 +224,7 @@ export class ShopService {
             // 권한 확인
             const { authcode: { auth } } = await this.user.findOne({ where: { email }, include: [AuthCode] })
             console.log(auth)
-            if (parseInt(auth) !== 2) {
+            if (auth !== "관리자") {
                 return false
             }
             return true

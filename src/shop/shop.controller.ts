@@ -30,8 +30,8 @@ export class ShopController {
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
-  @Get(":product")
-  async productListAll(@Param("product") type: string, @Query('page', ParseIntPipe) page: number, @Req() req: Request) {
+  @Post(":product/get")
+  async productListAll(@Param("product") type: string, @Body('page', ParseIntPipe) page: number, @Req() req: Request) {
     console.log("product List");
     try {
       const { cookies: { token } } = req;
@@ -49,8 +49,8 @@ export class ShopController {
   @ApiResponse({ status: 200, description: 'find success' })
   @ApiResponse({ status: 403, description: 'not find Resource' })
   @ApiParam({ name: 'product', type: 'string', description: 'product type' })
-  @Get("mybox/:product")
-  async getMybox(@Req() req: Request, @Param("product") type: string, @Query("page", ParseIntPipe) page: number, @Query('use', ParseBoolPipe) usage: boolean) {
+  @Post("mybox/:product")
+  async getMybox(@Req() req: Request, @Param("product") type: string, @Body("page", ParseIntPipe) page: number, @Body('use', ParseBoolPipe) usage: boolean) {
     const { cookies: { token } } = req;
     const data = await this.shopService.myStorage(type, page, usage, token);
     return data;

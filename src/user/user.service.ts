@@ -209,13 +209,13 @@ export class UserService {
     // 포인트 적립
     async pointStack(addPoint: pointSDTO, token: string) {
         try {
-            const { point } = addPoint;
+            const { points } = addPoint;
             const { email } = this.jwt.verify(token);
 
             const user = await this.userModel.findOne({ where: { email } })
 
             let userPoint = user.point || 0;
-            userPoint += point;
+            userPoint += points;
             // console.log(userPoint, 'userPoint')
 
             const AddPoint = await this.userModel.update({ point: userPoint }, { where: { email } })
@@ -232,7 +232,9 @@ export class UserService {
     // 유저 토큰
     userToken(token: object) {
         // 토큰 생성
-        return this.jwt.sign(token, { expiresIn: 60 * 30 * 1000, secret: process.env.JWT_KEY });
+        const str = this.jwt.sign(token, { expiresIn: 60 * 30 * 1000, secret: process.env.JWT_KEY });
+        console.log(`token: ${str}, obj :${token}, env: ${process.env.JWT_KEY}`)
+        return str
     }
 
     // 토큰 복호화

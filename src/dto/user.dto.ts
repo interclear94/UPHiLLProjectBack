@@ -49,5 +49,5 @@ export const kakaoIdSchema = z.object({
 })
 
 export const pointStackSchema = z.object({
-    point: z.number()
+    points: z.number()
 })

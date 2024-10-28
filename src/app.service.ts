@@ -47,6 +47,7 @@ export class AppService {
       console.log(error);
     }
   }
+
   /**
    * 초기 관리자 유저에 관한 권한 코드 설정
    */

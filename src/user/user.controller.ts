@@ -86,8 +86,16 @@ export class UserController {
       const date = new Date();
       date.setTime(date.getTime() + (5 * 60 * 60 * 1000));
 
-      res.cookie('token', token, { httpOnly: true, expires: date, sameSite: 'none', secure: true, path: '/', domain: 'uphillmountain.store' });
-      res.json(result)
+      //res.cookie('token', token, { httpOnly: true, path: '/', expires: date, sameSite: 'strict', secure: true, domain: 'uphillmountain.store' });
+      res.cookie('token', token, {
+        httpOnly: true,
+        path: '/',
+        expires: date,
+        sameSite: 'strict', // 또는 'lax', 필요에 따라
+        secure: true, // 개발 환경에서는 false로 설정할 수 있음
+        domain: 'uphillmountain.store', // 또는 '.uphillmountain.store' (서브도메인 포함)
+      });
+      res.send(result);
 
     } catch (error) {
       // console.error(error.response.response, 'controller error');
@@ -149,7 +157,15 @@ export class UserController {
 
       const token = this.userService.userToken(payload);
       date.setMinutes(date.getMinutes() + 30);
-      res.cookie("token", token, { httpOnly: true, expires: date })
+      //res.cookie('token', token, { httpOnly: true, path: '/', expires: date, sameSite: 'strict', secure: true, domain: 'https://uphillmountain.store' });
+      res.cookie('token', token, {
+        httpOnly: true,
+        path: '/',
+        expires: date,
+        sameSite: 'strict', // 또는 'lax', 필요에 따라
+        secure: true, // 개발 환경에서는 false로 설정할 수 있음
+        domain: 'uphillmountain.store', // 또는 '.uphillmountain.store' (서브도메인 포함)
+      });
       res.redirect('https://uphillmountain.store/main');
 
     } catch (error) {
@@ -265,7 +281,7 @@ export class UserController {
   async logout(@Res() res: Response) {
     try {
       res.clearCookie('token');
-      res.redirect('https://uphillmountain.store');
+      res.redirect('/');
     } catch (error) {
       throw new BadRequestException("Logout Error");
     }
@@ -293,7 +309,7 @@ export class UserController {
   }
 
   // 포인트 적립
-  @Post("pointstack")
+  @Post("pointStack")
   @ApiTags("user")
   @ApiOperation({ summary: "포인트 적립" })
   @ApiBody({
@@ -329,8 +345,8 @@ export class UserController {
   }
 
   // 주문 내역
-  @Get("order")
-  async getMyOrder(@Query("page", ParseIntPipe) page: number, @Req() req: Request) {
+  @Post("order")
+  async getMyOrder(@Body("page", ParseIntPipe) page: number, @Req() req: Request) {
     try {
       const { cookies: { token } } = req;
       return await this.userService.getMyOrder(page, token);
@@ -345,7 +361,7 @@ export class UserController {
     const { cookies: { token } } = req;
 
     if (!token) {
-      return res.redirect('https://uphillmountain.store');
+      return res.redirect('/main');
     }
 
     res.send('정상 로그인 되어 있으시네요 !');
